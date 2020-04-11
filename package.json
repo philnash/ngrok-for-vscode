@@ -2,6 +2,16 @@
   "name": "ngrok-for-vscode",
   "displayName": "ngrok for VSCode",
   "description": "",
+  "keywords": [
+    "ngrok",
+    "localtunnel",
+    "tunnel"
+  ],
+  "author": {
+    "name": "Phil Nash",
+    "email": "philnash@gmail.com",
+    "url": "https://philna.sh/"
+  },
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.44.0"
@@ -57,5 +67,6 @@
   },
   "dependencies": {
     "ngrok": "^3.2.7"
-  }
+  },
+  "license": "MIT"
 }
