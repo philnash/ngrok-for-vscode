@@ -2,9 +2,21 @@ import { homedir } from "os";
 import { join } from "path";
 
 import { window, env, Uri } from "vscode";
-import { connect, disconnect, getUrl } from "ngrok";
+import { connect, disconnect, getUrl, getApi } from "ngrok";
 
-let urls: string[] = [];
+type Tunnel = {
+  name: string;
+  uri: string;
+  public_url: string;
+  proto: string;
+  config: { [key: string]: string };
+  metrics: { [key: string]: { [key: string]: number } };
+};
+
+type TunnelsResponse = {
+  tunnels: Tunnel[];
+  uri: string;
+};
 
 export const start = async () => {
   const tunnel = await window.showInputBox({
@@ -20,18 +32,28 @@ export const start = async () => {
     } else {
       url = await connect({ addr: tunnel });
     }
-    urls.push(url);
-    window.showInformationMessage(`ngrok is forwarding ${url}`);
+    window.showInformationMessage(`ngrok is forwarding ${url}.`);
   }
 };
 
 export const stop = async () => {
-  const tunnel = await window.showQuickPick(urls);
-  if (typeof tunnel !== "undefined") {
-    await disconnect(tunnel);
-    await disconnect(tunnel.replace("https://", "http://"));
-    urls = urls.filter((url) => url !== tunnel);
-    window.showInformationMessage(`ngrok tunnel ${tunnel} disconnected`);
+  const api = getApi();
+  const response = ((await api.get("api/tunnels")) as unknown) as string;
+  const tunnels = (JSON.parse(response) as TunnelsResponse).tunnels;
+  if (tunnels.length > 0) {
+    const tunnel = await window.showQuickPick([
+      "All",
+      ...tunnels.map((t) => t.public_url),
+    ]);
+    if (tunnel === "All") {
+      await disconnect();
+      window.showInformationMessage("All ngrok tunnels disconnected.");
+    } else if (typeof tunnel !== "undefined") {
+      await disconnect(tunnel);
+      window.showInformationMessage(`ngrok tunnel ${tunnel} disconnected.`);
+    }
+  } else {
+    window.showInformationMessage("There are no active ngrok tunnels.");
   }
 };
 
