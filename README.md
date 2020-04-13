@@ -1,4 +1,4 @@
-<div style="text-align:center">
+<div style="text-align:center" align="center">
   <img src="images/icon.png" height="128" width="128">
   <h1>ngrok for vscode</h1>
 </div>
