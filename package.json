@@ -23,6 +23,7 @@
     "type": "git",
     "url": "https://github.com/philnash/ngrok-for-vscode.git"
   },
+  "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.44.0"
   },

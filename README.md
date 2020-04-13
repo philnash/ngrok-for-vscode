@@ -1,6 +1,9 @@
-# ngrok for vscode
+<div style="text-align:center">
+  <img src="images/icon.png" height="128" width="128">
+  <h1>ngrok for vscode</h1>
+</div>
 
-This is a VSCode extension for controlling [ngrok](https://ngrok.com/) from the command palette.
+> A VSCode extension for controlling [ngrok](https://ngrok.com/) from the command palette.
 
 ## Features
 
