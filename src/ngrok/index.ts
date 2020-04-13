@@ -1,8 +1,18 @@
 import { homedir } from "os";
 import { join } from "path";
+import { promises } from "fs";
+const { readFile } = promises;
 
-import { window, env, Uri } from "vscode";
-import { connect, disconnect, getUrl, getApi } from "ngrok";
+import { window, env, Uri, QuickPickItem, workspace } from "vscode";
+import {
+  connect,
+  disconnect,
+  getUrl,
+  getApi,
+  INgrokOptions,
+  authtoken,
+} from "ngrok";
+import { parse } from "yaml";
 
 type Tunnel = {
   name: string;
@@ -18,20 +28,108 @@ type TunnelsResponse = {
   uri: string;
 };
 
-export const start = async () => {
-  const tunnel = await window.showInputBox({
-    prompt: "Which port number or tunnel do you want to start?",
-    value: "3000",
+type NgrokConfig = {
+  authtoken?: string;
+  region?: string;
+  console_ui?: string | false;
+  console_ui_color?: string;
+  http_proxy?: string;
+  inspect_db_size?: number;
+  log_level?: string;
+  log_format?: string;
+  log?: string | false;
+  metadata?: string;
+  root_cas?: string;
+  socks5_proxy?: string;
+  update?: boolean;
+  update_channel?: string;
+  web_addr?: string | false;
+  tunnels?: { [key: string]: INgrokOptions };
+};
+
+type TunnelQuickPickItem = QuickPickItem & {
+  tunnelOptions: INgrokOptions;
+};
+
+const getConfigPath = () => {
+  let { configPath } = workspace.getConfiguration("ngrokForVSCode");
+  if (configPath === "") {
+    configPath = join(homedir(), ".ngrok2", "ngrok.yml");
+  }
+  return configPath;
+};
+
+const getConfig: () => Promise<NgrokConfig | undefined> = async () => {
+  const configPath = getConfigPath();
+  try {
+    const config = parse(await readFile(configPath, "utf8"));
+    if (typeof config.authtoken !== "undefined") {
+      await authtoken(config.authtoken);
+    }
+    return config;
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      window.showErrorMessage(`Could not find config file at ${configPath}.`);
+    } else {
+      window.showErrorMessage(`Could not parse config file at ${configPath}.`);
+    }
+  }
+};
+
+const tunnelsFromConfig = (tunnels: { [key: string]: INgrokOptions }) => {
+  return Object.keys(tunnels).map((tunnelName) => {
+    return {
+      label: tunnelName,
+      tunnelOptions: { name: tunnelName, ...tunnels[tunnelName] },
+    };
+  });
+};
+
+const getTunnelToStart: (
+  config: NgrokConfig | undefined
+) => Promise<INgrokOptions | undefined> = (config) =>
+  new Promise((resolve) => {
+    const quickPick = window.createQuickPick();
+    let items: TunnelQuickPickItem[];
+    if (config && config.tunnels) {
+      items = tunnelsFromConfig(config.tunnels);
+      quickPick.title = "Choose tunnel from options or enter a port number.";
+    } else {
+      items = [];
+      quickPick.title = "Enter a port number.";
+    }
+    quickPick.items = items;
+    quickPick.onDidChangeValue(() => {
+      const addr = parseInt(quickPick.value, 10);
+      if (
+        !Number.isNaN(addr) &&
+        !items.map((item) => item.label).includes(quickPick.value)
+      ) {
+        const newItems: TunnelQuickPickItem[] = [
+          { label: quickPick.value, tunnelOptions: { addr, proto: "http" } },
+          ...items,
+        ];
+        quickPick.items = newItems;
+      }
+    });
+    quickPick.onDidHide(() => {
+      quickPick.dispose();
+      resolve();
+    });
+    quickPick.onDidAccept(() => {
+      const selection = quickPick.activeItems[0] as TunnelQuickPickItem;
+      resolve(selection.tunnelOptions);
+      quickPick.hide();
+    });
+    quickPick.show();
   });
 
+export const start = async () => {
+  const config = await getConfig();
+  const tunnel = await getTunnelToStart(config);
   if (typeof tunnel !== "undefined") {
-    let url;
-    const portNumber = parseInt(tunnel, 10);
-    if (Number.isNaN(portNumber)) {
-      url = await connect({ name: tunnel });
-    } else {
-      url = await connect({ addr: tunnel });
-    }
+    tunnel.configPath = getConfigPath();
+    const url = await connect(tunnel);
     window.showInformationMessage(`ngrok is forwarding ${url}.`);
   }
 };

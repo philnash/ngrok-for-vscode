@@ -4,7 +4,7 @@ import { kill } from "ngrok";
 
 const namespace = "ngrok-for-vscode";
 
-export function activate(context: ExtensionContext) {
+export async function activate(context: ExtensionContext) {
   context.subscriptions.push(
     commands.registerCommand(`${namespace}.start`, start)
   );

@@ -42,7 +42,17 @@
         "title": "dashboard",
         "category": "ngrok"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "ngrok for VSCode",
+      "properties": {
+        "ngrokForVSCode.configPath": {
+          "type": "string",
+          "default": "",
+          "description": "The location of your ngrok config file."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -66,7 +76,9 @@
     "vscode-test": "^1.3.0"
   },
   "dependencies": {
-    "ngrok": "^3.2.7"
+    "@types/yaml": "^1.2.0",
+    "ngrok": "^3.2.7",
+    "yaml": "^1.8.3"
   },
   "license": "MIT"
 }
