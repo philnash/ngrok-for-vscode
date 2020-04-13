@@ -4,6 +4,11 @@ All notable changes to the "ngrok-for-vscode" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased]
+## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.0.0...HEAD)
+
+## [1.0.0](https://github.com/philnash/ngrok-for-vscode/releases/tag/v1.0.0) - 2020-04-13
+
+### Added
 
 - Initial release
+- Supports starting and stopping ngrok tunnels and opening the ngrok dashboard

@@ -15,6 +15,7 @@
     "email": "philnash@gmail.com",
     "url": "https://philna.sh/"
   },
+  "publisher": "philnash",
   "homepage": "https://github.com/philnash/ngrok-for-vscode",
   "bugs": {
     "url": "https://github.com/philnash/ngrok-for-vscode/issues"
