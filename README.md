@@ -1,7 +1,7 @@
 <div style="text-align:center" align="center">
   <img src="images/icon.png" height="128" width="128">
   <h1>ngrok for vscode</h1>
-  <p>A VSCode extension for controlling [ngrok](https://ngrok.com/) from the command palette.</p>
+  <p><em>A VSCode extension for controlling <a href="https://ngrok.com/">ngrok</a> from the command palette.</em></p>
 </div>
 
 ## Features
