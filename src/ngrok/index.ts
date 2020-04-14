@@ -1,6 +1,6 @@
 import { homedir } from "os";
 import { join } from "path";
-import { promises } from "fs";
+import { promises, existsSync } from "fs";
 const { readFile } = promises;
 
 import { window, env, Uri, QuickPickItem, workspace } from "vscode";
@@ -51,10 +51,12 @@ type TunnelQuickPickItem = QuickPickItem & {
   tunnelOptions: INgrokOptions;
 };
 
+const DEFAULT_CONFIG_PATH = join(homedir(), ".ngrok2", "ngrok.yml");
+
 const getConfigPath = () => {
   let { configPath } = workspace.getConfiguration("ngrokForVSCode");
   if (configPath === "") {
-    configPath = join(homedir(), ".ngrok2", "ngrok.yml");
+    configPath = DEFAULT_CONFIG_PATH;
   }
   return configPath;
 };
@@ -69,7 +71,9 @@ const getConfig: () => Promise<NgrokConfig | undefined> = async () => {
     return config;
   } catch (error) {
     if (error.code === "ENOENT") {
-      window.showErrorMessage(`Could not find config file at ${configPath}.`);
+      if (configPath !== DEFAULT_CONFIG_PATH) {
+        window.showErrorMessage(`Could not find config file at ${configPath}.`);
+      }
     } else {
       window.showErrorMessage(`Could not parse config file at ${configPath}.`);
     }
@@ -128,9 +132,17 @@ export const start = async () => {
   const config = await getConfig();
   const tunnel = await getTunnelToStart(config);
   if (typeof tunnel !== "undefined") {
-    tunnel.configPath = getConfigPath();
-    const url = await connect(tunnel);
-    window.showInformationMessage(`ngrok is forwarding ${url}.`);
+    const configPath = getConfigPath();
+    if (existsSync(configPath)) {
+      tunnel.configPath = configPath;
+    }
+    try {
+      const url = await connect(tunnel);
+      window.showInformationMessage(`ngrok is forwarding ${url}.`);
+    } catch (error) {
+      window.showErrorMessage(`There was an error starting your tunnel.`);
+      console.error(error);
+    }
   }
 };
 
