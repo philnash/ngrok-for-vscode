@@ -28,6 +28,13 @@ This extension contributes the following settings:
 
 ## Release Notes
 
+### 1.0.1
+
+#### Fixed
+
+- When the default ngrok config is not present, don't show an error
+- When the config file is not present, don't try to use it as part of the connect options
+
 ### 1.0.0
 
 Initial release of _ngrok for VSCode_.
