@@ -138,7 +138,20 @@ export const start = async () => {
     }
     try {
       const url = await connect(tunnel);
-      window.showInformationMessage(`ngrok is forwarding ${url}.`);
+      const action = await window.showInformationMessage(
+        `ngrok is forwarding ${url}.`,
+        "Copy to clipboard",
+        "Open in browser"
+      );
+      switch (action) {
+        case "Copy to clipboard":
+          await env.clipboard.writeText(url);
+          window.showInformationMessage(`Copied "${url}" to your clipboard.`);
+          break;
+        case "Open in browser":
+          env.openExternal(Uri.parse(url));
+          break;
+      }
     } catch (error) {
       window.showErrorMessage(`There was an error starting your tunnel.`);
       console.error(error);

@@ -4,7 +4,11 @@ All notable changes to the "ngrok-for-vscode" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.0.0...HEAD)
+## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.0.1...HEAD)
+
+### Added
+
+- Buttons to copy tunnel URL to clipboard or open in browser in success message
 
 ## [1.0.1](https://github.com/philnash/ngrok-for-vscode/compare/v1.0.0...v1.0.1)
 
