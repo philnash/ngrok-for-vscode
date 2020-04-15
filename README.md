@@ -28,6 +28,12 @@ This extension contributes the following settings:
 
 ## Release Notes
 
+### 1.1.0
+
+#### Added
+
+- Buttons to copy tunnel URL to clipboard or open in browser in success message
+
 ### 1.0.1
 
 #### Fixed
