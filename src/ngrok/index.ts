@@ -3,7 +3,7 @@ import { join } from "path";
 import { promises, existsSync } from "fs";
 const { readFile } = promises;
 
-import { window, env, Uri, QuickPickItem, workspace } from "vscode";
+import { window, env, Uri, QuickPickItem, workspace, ProgressLocation } from "vscode";
 import {
   connect,
   disconnect,
@@ -12,6 +12,7 @@ import {
   INgrokOptions,
   authtoken,
 } from "ngrok";
+import download = require('ngrok/download');
 import { parse } from "yaml";
 
 type Tunnel = {
@@ -189,4 +190,26 @@ export const dashboard = () => {
       "ngrok is not currently running, please start a tunnel before accessing the dashboard"
     );
   }
+};
+
+export const downloadBinary = () => {
+  return window.withProgress(
+    {
+      location: ProgressLocation.Notification,
+      cancellable: false,
+      title: 'Updating an ngrock binary. This may take a while.',
+    },
+    async () => {
+      try {
+        await new Promise((resolve, reject) =>
+          download((err) => (err ? reject(err) : resolve()))
+        );
+      } catch (e) {
+        window.showErrorMessage(
+          `Can't update ngrock binary. The extension may not work correctly.`
+        );
+        console.error(e);
+      }
+    }
+  );
 };

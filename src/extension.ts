@@ -1,10 +1,12 @@
 import { commands, ExtensionContext } from "vscode";
-import { start, stop, dashboard } from "./ngrok";
+import { start, stop, dashboard, downloadBinary } from "./ngrok";
 import { kill } from "ngrok";
 
 const namespace = "ngrok-for-vscode";
 
 export async function activate(context: ExtensionContext) {
+  await downloadBinary();
+
   context.subscriptions.push(
     commands.registerCommand(`${namespace}.start`, start)
   );
