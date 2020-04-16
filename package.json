@@ -78,9 +78,11 @@
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
+    "@types/mkdirp": "^1.0.0",
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.11.0",
     "@types/vscode": "^1.44.0",
+    "@types/yaml": "^1.2.0",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
@@ -95,8 +97,6 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@types/mkdirp": "^1.0.0",
-    "@types/yaml": "^1.2.0",
     "mkdirp": "^1.0.4",
     "ngrok": "^3.2.7",
     "yaml": "^1.8.3"
