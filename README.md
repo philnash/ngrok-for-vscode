@@ -28,6 +28,12 @@ This extension contributes the following settings:
 
 ## Release Notes
 
+### [1.2.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.1.0...v1.2.0)
+
+#### Added
+
+- On first activation extension downloads the correct ngrok binary for your system
+
 ### 1.1.0
 
 #### Added

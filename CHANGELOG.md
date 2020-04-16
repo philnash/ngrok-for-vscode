@@ -4,7 +4,13 @@ All notable changes to the "ngrok-for-vscode" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.1.0...HEAD)
+## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.2.0...HEAD)
+
+## [1.2.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.1.0...v1.2.0)
+
+### Added
+
+- On first activation extension downloads the correct ngrok binary for your system
 
 ## [1.1.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.0.1...v1.1.0)
 
