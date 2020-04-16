@@ -23,6 +23,7 @@ import {
 import download = require('ngrok/download');
 
 import { parse } from 'yaml';
+import * as mkdirp from 'mkdirp';
 
 type Tunnel = {
   name: string;
@@ -202,23 +203,34 @@ export const dashboard = () => {
 };
 
 export const downloadBinary = () => {
-  return window.withProgress(
-    {
-      location: ProgressLocation.Notification,
-      cancellable: false,
-      title: 'Updating an ngrock binary. This may take a while.',
-    },
-    async () => {
-      try {
-        await new Promise((resolve, reject) =>
-          download((err) => (err ? reject(err) : resolve()))
-        );
-      } catch (e) {
-        window.showErrorMessage(
-          `Can't update ngrock binary. The extension may not work correctly.`
-        );
-        console.error(e);
+  const basePath = join(__dirname, 'bin');
+  const binaryLocations = [
+    join(basePath, 'ngrok'),
+    join(basePath, 'ngrok.exe'),
+  ];
+  if (binaryLocations.some((path) => existsSync(path))) {
+    console.info('ngrok binary is already downloaded');
+    return;
+  } else {
+    return window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        cancellable: false,
+        title: 'Downloading ngrok binary. This may take a while.',
+      },
+      async () => {
+        await mkdirp(basePath);
+        try {
+          await new Promise((resolve, reject) =>
+            download((error) => (error ? reject(error) : resolve()))
+          );
+        } catch (error) {
+          window.showErrorMessage(
+            `Can't update ngrok binary. The extension may not work correctly.`
+          );
+          console.error(error);
+        }
       }
-    }
-  );
+    );
+  }
 };
