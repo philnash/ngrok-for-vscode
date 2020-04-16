@@ -36,6 +36,7 @@ const config = {
   module: {
     rules:
         [{test: /\.ts$/, exclude: /node_modules/, use: [{loader: 'ts-loader'}]}]
-  }
+  },
+  node: {__dirname: false}
 };
 module.exports = config;

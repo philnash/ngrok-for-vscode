@@ -1,28 +1,24 @@
-import {kill} from 'ngrok';
-import {commands, ExtensionContext} from 'vscode';
+import { kill } from 'ngrok';
+import { commands, ExtensionContext } from 'vscode';
 
-import {dashboard, start, stop} from './ngrok';
-import download = require('ngrok/download');
+import { dashboard, downloadBinary, start, stop } from './ngrok';
 
 const namespace = 'ngrok-for-vscode';
 
 export async function activate(context: ExtensionContext) {
-  // Because of vscode design we need to check for native dependencies on
-  // activation (https://github.com/microsoft/vscode/issues/23251) This fails
-  // because of permissions issues (tries to save binary to /bin/ngrock instead
-  // of `_dirname/bin/ngrock`)
-  await new Promise((resolve, reject) => download((err) => {
-                      return err ? reject(err) : resolve();
-                    }));
+  await downloadBinary();
 
   context.subscriptions.push(
-      commands.registerCommand(`${namespace}.start`, start));
+    commands.registerCommand(`${namespace}.start`, start)
+  );
 
   context.subscriptions.push(
-      commands.registerCommand(`${namespace}.stop`, stop));
+    commands.registerCommand(`${namespace}.stop`, stop)
+  );
 
   context.subscriptions.push(
-      commands.registerCommand(`${namespace}.dashboard`, dashboard));
+    commands.registerCommand(`${namespace}.dashboard`, dashboard)
+  );
 }
 
 export async function deactivate() {
