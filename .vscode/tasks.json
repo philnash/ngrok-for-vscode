@@ -8,6 +8,14 @@
       "problemMatcher": [],
       "label": "npm: compile",
       "detail": "webpack --mode development"
+    },
+    {
+      "type": "npm",
+      "script": "test-compile",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "npm: test-compile",
+      "detail": "tsc -p ./"
     }
   ]
 }
