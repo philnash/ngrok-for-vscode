@@ -15,6 +15,7 @@ import {
 import {
   connect,
   disconnect,
+  kill,
   getUrl,
   getApi,
   INgrokOptions,
@@ -100,6 +101,11 @@ const tunnelsFromConfig = (tunnels: { [key: string]: INgrokOptions }) => {
   });
 };
 
+const getActiveTunnels: (api: any) => Promise<Tunnel[]> = async (api: any) => {
+  const response = ((await api.get('api/tunnels')) as unknown) as string;
+  return (JSON.parse(response) as TunnelsResponse).tunnels;
+};
+
 const getTunnelToStart: (
   config: NgrokConfig | undefined
 ) => Promise<INgrokOptions | undefined> = (config) =>
@@ -172,8 +178,7 @@ export const start = async () => {
 
 export const stop = async () => {
   const api = getApi();
-  const response = ((await api.get('api/tunnels')) as unknown) as string;
-  const tunnels = (JSON.parse(response) as TunnelsResponse).tunnels;
+  const tunnels = await getActiveTunnels(api);
   if (tunnels.length > 0) {
     const tunnel = await window.showQuickPick([
       'All',
@@ -181,10 +186,18 @@ export const stop = async () => {
     ]);
     if (tunnel === 'All') {
       await disconnect();
-      window.showInformationMessage('All ngrok tunnels disconnected.');
+      await kill();
+      window.showInformationMessage(
+        'All ngrok tunnels disconnected. ngrok has been shutdown.'
+      );
     } else if (typeof tunnel !== 'undefined') {
       await disconnect(tunnel);
-      window.showInformationMessage(`ngrok tunnel ${tunnel} disconnected.`);
+      let message = `ngrok tunnel ${tunnel} disconnected.`;
+      if ((await getActiveTunnels(api)).length === 0) {
+        await kill();
+        message = `${message}. ngrok has been shutdown.`;
+      }
+      window.showInformationMessage(message);
     }
   } else {
     window.showInformationMessage('There are no active ngrok tunnels.');
@@ -192,8 +205,9 @@ export const stop = async () => {
 };
 
 export const dashboard = () => {
+  const api = getApi();
   const url = getUrl();
-  if (typeof url !== 'undefined') {
+  if (api && typeof url !== 'undefined') {
     return env.openExternal(Uri.parse(url));
   } else {
     return window.showErrorMessage(
