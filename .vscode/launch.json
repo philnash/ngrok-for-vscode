@@ -7,7 +7,7 @@
     {
       "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
       "name": "Debug Extension",
-      "outFiles": ["${workspaceFolder}/out/**/*.js"],
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "preLaunchTask": "npm: compile",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
