@@ -2,6 +2,7 @@
   <img src="images/icon.png" height="128" width="128">
   <h1>ngrok for vscode</h1>
   <p><em>A VSCode extension for controlling <a href="https://ngrok.com/">ngrok</a> from the command palette.</em></p>
+  <p><a href="https://marketplace.visualstudio.com/items?itemName=philnash.ngrok-for-vscode"><img src="https://vsmarketplacebadge.apphb.com/version-short/philnash.ngrok-for-vscode.svg?label=ngrok%20for%20VSCode&color=blue&logo=visual-studio-code" alt="VSCode Marketplace badge" /></a></p>
 </div>
 
 ## Features
@@ -53,6 +54,19 @@ Initial release of _ngrok for VSCode_.
 
 - Supports starting and stopping ngrok tunnels and opening the ngrok dashboard
 
-## Thanks
+## Contributors
 
-Thanks go to [Alan Shreve](https://github.com/inconshreveable) for [ngrok](https://ngrok.com) and [Alex Bubenshchykov](https://github.com/bubenshchykov) for the [Node.js wrapper for ngrok](https://github.com/bubenshchykov/ngrok).
+### Author
+
+**Phil Nash** - [GitHub](https://github.com/philnash) • [Website](https://philna.sh) • [Twitter](https://twitter.com/philnash)
+
+### Other contributors
+
+**Michał Mrozek** - [GitHub](https://github.com/Michsior14)
+
+### Thanks
+
+Thanks go to:
+
+- [Alan Shreve](https://github.com/inconshreveable) and [contributors](https://github.com/inconshreveable/ngrok/graphs/contributors) for [ngrok](https://ngrok.com)
+- [Alex Bubenshchykov](https://github.com/bubenshchykov) and [contributors](https://github.com/bubenshchykov/ngrok/graphs/contributors) for the [Node.js wrapper for ngrok](https://github.com/bubenshchykov/ngrok).
