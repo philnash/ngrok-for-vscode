@@ -21,8 +21,8 @@ import {
   INgrokOptions,
   authtoken,
 } from 'ngrok';
+import { RequestPromise } from 'request-promise-native';
 import download = require('ngrok/download');
-
 import { parse } from 'yaml';
 import * as mkdirp from 'mkdirp';
 
@@ -102,8 +102,10 @@ const tunnelsFromConfig = (tunnels: { [key: string]: INgrokOptions }) => {
 };
 
 const getActiveTunnels: (api: any) => Promise<Tunnel[]> = async (api: any) => {
-  const response = ((await api.get('api/tunnels')) as unknown) as string;
-  return (JSON.parse(response) as TunnelsResponse).tunnels;
+  const response = await (api.get('api/tunnels', {
+    json: true,
+  }) as RequestPromise<TunnelsResponse>);
+  return response.tunnels;
 };
 
 const getTunnelToStart: (

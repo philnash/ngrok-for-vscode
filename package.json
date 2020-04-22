@@ -81,6 +81,7 @@
     "@types/mkdirp": "^1.0.0",
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.11.0",
+    "@types/request-promise-native": "^1.0.17",
     "@types/vscode": "^1.44.0",
     "@types/yaml": "^1.2.0",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
