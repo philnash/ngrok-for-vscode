@@ -180,6 +180,11 @@ export const start = async () => {
 
 export const stop = async () => {
   const api = getApi();
+  if (!api) {
+    return window.showErrorMessage(
+      'ngrok is not currently running, please start a tunnel before accessing the dashboard'
+    );
+  }
   const tunnels = await getActiveTunnels(api);
   if (tunnels.length > 0) {
     const tunnel = await window.showQuickPick([
