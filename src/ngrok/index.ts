@@ -195,7 +195,7 @@ export const stop = async () => {
       let message = `ngrok tunnel ${tunnel} disconnected.`;
       if ((await getActiveTunnels(api)).length === 0) {
         await kill();
-        message = `${message}. ngrok has been shutdown.`;
+        message = `${message} ngrok has been shutdown.`;
       }
       window.showInformationMessage(message);
     }
