@@ -1,4 +1,4 @@
-declare module "ngrok/download" {
+declare module 'ngrok/download' {
   function download(
     callback: (err?: Error) => void,
     options?: {

@@ -1,6 +1,7 @@
-import { homedir } from "os";
-import { join } from "path";
-import { promises, existsSync } from "fs";
+import { existsSync, promises } from 'fs';
+import { homedir } from 'os';
+import { join } from 'path';
+
 const { readFile } = promises;
 
 import {
@@ -10,7 +11,7 @@ import {
   QuickPickItem,
   workspace,
   ProgressLocation,
-} from "vscode";
+} from 'vscode';
 import {
   connect,
   disconnect,
@@ -18,10 +19,11 @@ import {
   getApi,
   INgrokOptions,
   authtoken,
-} from "ngrok";
-import download = require("ngrok/download");
-import { parse } from "yaml";
-import * as mkdirp from "mkdirp";
+} from 'ngrok';
+import download = require('ngrok/download');
+
+import { parse } from 'yaml';
+import * as mkdirp from 'mkdirp';
 
 type Tunnel = {
   name: string;
@@ -60,11 +62,11 @@ type TunnelQuickPickItem = QuickPickItem & {
   tunnelOptions: INgrokOptions;
 };
 
-const DEFAULT_CONFIG_PATH = join(homedir(), ".ngrok2", "ngrok.yml");
+const DEFAULT_CONFIG_PATH = join(homedir(), '.ngrok2', 'ngrok.yml');
 
 const getConfigPath = () => {
-  let { configPath } = workspace.getConfiguration("ngrokForVSCode");
-  if (configPath === "") {
+  let { configPath } = workspace.getConfiguration('ngrokForVSCode');
+  if (configPath === '') {
     configPath = DEFAULT_CONFIG_PATH;
   }
   return configPath;
@@ -73,13 +75,13 @@ const getConfigPath = () => {
 const getConfig: () => Promise<NgrokConfig | undefined> = async () => {
   const configPath = getConfigPath();
   try {
-    const config = parse(await readFile(configPath, "utf8"));
-    if (typeof config.authtoken !== "undefined") {
+    const config = parse(await readFile(configPath, 'utf8'));
+    if (typeof config.authtoken !== 'undefined') {
       await authtoken(config.authtoken);
     }
     return config;
   } catch (error) {
-    if (error.code === "ENOENT") {
+    if (error.code === 'ENOENT') {
       if (configPath !== DEFAULT_CONFIG_PATH) {
         window.showErrorMessage(`Could not find config file at ${configPath}.`);
       }
@@ -106,10 +108,10 @@ const getTunnelToStart: (
     let items: TunnelQuickPickItem[];
     if (config && config.tunnels) {
       items = tunnelsFromConfig(config.tunnels);
-      quickPick.title = "Choose tunnel from options or enter a port number.";
+      quickPick.title = 'Choose tunnel from options or enter a port number.';
     } else {
       items = [];
-      quickPick.title = "Enter a port number.";
+      quickPick.title = 'Enter a port number.';
     }
     quickPick.items = items;
     quickPick.onDidChangeValue(() => {
@@ -119,7 +121,7 @@ const getTunnelToStart: (
         !items.map((item) => item.label).includes(quickPick.value)
       ) {
         const newItems: TunnelQuickPickItem[] = [
-          { label: quickPick.value, tunnelOptions: { addr, proto: "http" } },
+          { label: quickPick.value, tunnelOptions: { addr, proto: 'http' } },
           ...items,
         ];
         quickPick.items = newItems;
@@ -140,7 +142,7 @@ const getTunnelToStart: (
 export const start = async () => {
   const config = await getConfig();
   const tunnel = await getTunnelToStart(config);
-  if (typeof tunnel !== "undefined") {
+  if (typeof tunnel !== 'undefined') {
     const configPath = getConfigPath();
     if (existsSync(configPath)) {
       tunnel.configPath = configPath;
@@ -149,15 +151,15 @@ export const start = async () => {
       const url = await connect(tunnel);
       const action = await window.showInformationMessage(
         `ngrok is forwarding ${url}.`,
-        "Copy to clipboard",
-        "Open in browser"
+        'Copy to clipboard',
+        'Open in browser'
       );
       switch (action) {
-        case "Copy to clipboard":
+        case 'Copy to clipboard':
           await env.clipboard.writeText(url);
           window.showInformationMessage(`Copied "${url}" to your clipboard.`);
           break;
-        case "Open in browser":
+        case 'Open in browser':
           env.openExternal(Uri.parse(url));
           break;
       }
@@ -170,51 +172,51 @@ export const start = async () => {
 
 export const stop = async () => {
   const api = getApi();
-  const response = ((await api.get("api/tunnels")) as unknown) as string;
+  const response = ((await api.get('api/tunnels')) as unknown) as string;
   const tunnels = (JSON.parse(response) as TunnelsResponse).tunnels;
   if (tunnels.length > 0) {
     const tunnel = await window.showQuickPick([
-      "All",
+      'All',
       ...tunnels.map((t) => t.public_url),
     ]);
-    if (tunnel === "All") {
+    if (tunnel === 'All') {
       await disconnect();
-      window.showInformationMessage("All ngrok tunnels disconnected.");
-    } else if (typeof tunnel !== "undefined") {
+      window.showInformationMessage('All ngrok tunnels disconnected.');
+    } else if (typeof tunnel !== 'undefined') {
       await disconnect(tunnel);
       window.showInformationMessage(`ngrok tunnel ${tunnel} disconnected.`);
     }
   } else {
-    window.showInformationMessage("There are no active ngrok tunnels.");
+    window.showInformationMessage('There are no active ngrok tunnels.');
   }
 };
 
 export const dashboard = () => {
   const url = getUrl();
-  if (typeof url !== "undefined") {
+  if (typeof url !== 'undefined') {
     return env.openExternal(Uri.parse(url));
   } else {
     return window.showErrorMessage(
-      "ngrok is not currently running, please start a tunnel before accessing the dashboard"
+      'ngrok is not currently running, please start a tunnel before accessing the dashboard'
     );
   }
 };
 
 export const downloadBinary = () => {
-  const basePath = join(__dirname, "..", "..", "node_modules", "ngrok", "bin");
+  const basePath = join(__dirname, 'bin');
   const binaryLocations = [
-    join(basePath, "ngrok"),
-    join(basePath, "ngrok.exe"),
+    join(basePath, 'ngrok'),
+    join(basePath, 'ngrok.exe'),
   ];
   if (binaryLocations.some((path) => existsSync(path))) {
-    console.info("ngrok binary is already downloaded");
+    console.info('ngrok binary is already downloaded');
     return;
   } else {
     return window.withProgress(
       {
         location: ProgressLocation.Notification,
         cancellable: false,
-        title: "Downloading ngrok binary. This may take a while.",
+        title: 'Downloading ngrok binary. This may take a while.',
       },
       async () => {
         await mkdirp(basePath);
