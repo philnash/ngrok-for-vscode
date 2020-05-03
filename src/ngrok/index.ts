@@ -1,17 +1,7 @@
-import { existsSync, promises } from 'fs';
-import { homedir } from 'os';
+import { existsSync } from 'fs';
 import { join } from 'path';
 
-const { readFile } = promises;
-
-import {
-  window,
-  env,
-  Uri,
-  QuickPickItem,
-  workspace,
-  ProgressLocation,
-} from 'vscode';
+import { window, env, Uri, ProgressLocation } from 'vscode';
 import {
   connect,
   disconnect,
@@ -23,72 +13,21 @@ import {
 } from 'ngrok';
 import { RequestPromise } from 'request-promise-native';
 import download = require('ngrok/download');
-import { parse } from 'yaml';
 import * as mkdirp from 'mkdirp';
 
-type Tunnel = {
-  name: string;
-  uri: string;
-  public_url: string;
-  proto: string;
-  config: { [key: string]: string };
-  metrics: { [key: string]: { [key: string]: number } };
-};
+import {
+  TunnelQuickPickItem,
+  TunnelsResponse,
+  Tunnel,
+  NgrokConfig,
+} from './types';
+import { getConfig, getConfigPath } from './config';
 
-type TunnelsResponse = {
-  tunnels: Tunnel[];
-  uri: string;
-};
-
-type NgrokConfig = {
-  authtoken?: string;
-  region?: string;
-  console_ui?: string | false;
-  console_ui_color?: string;
-  http_proxy?: string;
-  inspect_db_size?: number;
-  log_level?: string;
-  log_format?: string;
-  log?: string | false;
-  metadata?: string;
-  root_cas?: string;
-  socks5_proxy?: string;
-  update?: boolean;
-  update_channel?: string;
-  web_addr?: string | false;
-  tunnels?: { [key: string]: INgrokOptions };
-};
-
-type TunnelQuickPickItem = QuickPickItem & {
-  tunnelOptions: INgrokOptions;
-};
-
-const DEFAULT_CONFIG_PATH = join(homedir(), '.ngrok2', 'ngrok.yml');
-
-const getConfigPath = () => {
-  let { configPath } = workspace.getConfiguration('ngrokForVSCode');
-  if (configPath === '') {
-    configPath = DEFAULT_CONFIG_PATH;
-  }
-  return configPath;
-};
-
-const getConfig: () => Promise<NgrokConfig | undefined> = async () => {
-  const configPath = getConfigPath();
-  try {
-    const config = parse(await readFile(configPath, 'utf8'));
-    if (typeof config.authtoken !== 'undefined') {
-      await authtoken(config.authtoken);
-    }
-    return config;
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      if (configPath !== DEFAULT_CONFIG_PATH) {
-        window.showErrorMessage(`Could not find config file at ${configPath}.`);
-      }
-    } else {
-      window.showErrorMessage(`Could not parse config file at ${configPath}.`);
-    }
+const setAuthToken: (config: NgrokConfig | undefined) => Promise<void> = async (
+  config
+) => {
+  if (config && typeof config.authtoken !== 'undefined') {
+    await authtoken(config.authtoken);
   }
 };
 
@@ -148,10 +87,11 @@ const getTunnelToStart: (
   });
 
 export const start = async () => {
-  const config = await getConfig();
+  const configPath = getConfigPath();
+  const config = await getConfig(configPath);
+  await setAuthToken(config);
   const tunnel = await getTunnelToStart(config);
   if (typeof tunnel !== 'undefined') {
-    const configPath = getConfigPath();
     if (existsSync(configPath)) {
       tunnel.configPath = configPath;
     }
