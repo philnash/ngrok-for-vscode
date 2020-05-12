@@ -8,6 +8,16 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ...
 
+## [1.4.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.3.0...1.4.0) - 2020-05-12
+
+### Fixed
+
+- Excludes ngrok binary from dist directory in built package
+
+### Added
+
+- GitHub Action to run tests
+
 ## [1.3.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.2.0...v1.3.0) - 2020-04-22
 
 ### Added

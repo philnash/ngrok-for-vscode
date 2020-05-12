@@ -32,12 +32,15 @@ This extension contributes the following settings:
 
 ## Release Notes
 
-### 1.3.0 - 2020-04-22
+## [1.4.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.3.0...1.4.0) - 2020-05-12
 
-#### Added
+### Fixed
 
-- Webpack compilation to improve performance in release (see [#1](https://github.com/philnash/ngrok-for-vscode/issues/1)). Thanks [@Michsior14](https://github.com/Michsior14)
-- When all tunnels are stopped, ngrok process is killed (see [#10](https://github.com/philnash/ngrok-for-vscode/issues/10))
+- Excludes ngrok binary from dist directory in built package
+
+### Added
+
+- GitHub Action to run tests
 
 See the [CHANGELOG](CHANGELOG.md) for all release notes.
 
