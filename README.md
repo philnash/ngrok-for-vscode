@@ -4,7 +4,7 @@
   <p><em>A VSCode extension for controlling <a href="https://ngrok.com/">ngrok</a> from the command palette.</em></p>
   <p>
     <a href="https://marketplace.visualstudio.com/items?itemName=philnash.ngrok-for-vscode"><img src="https://vsmarketplacebadge.apphb.com/version-short/philnash.ngrok-for-vscode.svg?label=ngrok%20for%20VSCode&color=blue&logo=visual-studio-code" alt="VSCode Marketplace badge" /></a>
-    <a href="https://github.com/philnash/ngrok-for-vscode/actions"><img src="https://github.com/philnash/ngrok-for-vscode/workflows/Tests/badge.svg" alt="GitHub Actions CI status" /></a>
+    <a href="https://github.com/philnash/ngrok-for-vscode/actions"><img src="https://img.shields.io/github/workflow/status/philnash/ngrok-for-vscode/Tests.svg?logo=github&label=Tests" alt="GitHub Actions CI status" /></a>
   </p>
 </div>
 
