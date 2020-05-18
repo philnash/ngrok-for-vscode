@@ -4,9 +4,15 @@ All notable changes to the "ngrok-for-vscode" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.3.0...HEAD)
+## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.5.0...HEAD)
 
 ...
+
+## [1.5.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.4.0...1.5.0) - 2020-05-18
+
+### Added
+
+- Status Bar Item in VSCode shows when ngrok is running
 
 ## [1.4.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.3.0...1.4.0) - 2020-05-12
 

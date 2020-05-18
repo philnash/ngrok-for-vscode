@@ -32,15 +32,11 @@ This extension contributes the following settings:
 
 ## Release Notes
 
-## [1.4.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.3.0...1.4.0) - 2020-05-12
-
-### Fixed
-
-- Excludes ngrok binary from dist directory in built package
+## [1.5.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.4.0...1.5.0) - 2020-05-18
 
 ### Added
 
-- GitHub Action to run tests
+- Status Bar Item in VSCode shows when ngrok is running
 
 See the [CHANGELOG](CHANGELOG.md) for all release notes.
 
