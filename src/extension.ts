@@ -2,6 +2,7 @@ import { kill } from 'ngrok';
 import { commands, ExtensionContext } from 'vscode';
 
 import { dashboard, downloadBinary, start, stop } from './ngrok';
+import { createStatusBarItem } from './ngrok/statusBarItem';
 
 const namespace = 'ngrok-for-vscode';
 
@@ -19,6 +20,8 @@ export async function activate(context: ExtensionContext) {
   context.subscriptions.push(
     commands.registerCommand(`${namespace}.dashboard`, dashboard)
   );
+
+  context.subscriptions.push(createStatusBarItem(`${namespace}.stop`));
 }
 
 export async function deactivate() {

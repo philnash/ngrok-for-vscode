@@ -2,6 +2,8 @@ import { existsSync, promises } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 
+import { showStatusBarItem, hideStatusBarItem } from './statusBarItem';
+
 const { readFile } = promises;
 
 import {
@@ -157,6 +159,7 @@ export const start = async () => {
     }
     try {
       const url = await connect(tunnel);
+      showStatusBarItem();
       const action = await window.showInformationMessage(
         `ngrok is forwarding ${url}.`,
         'Copy to clipboard',
@@ -182,27 +185,29 @@ export const stop = async () => {
   const api = getApi();
   if (!api) {
     return window.showErrorMessage(
-      'ngrok is not currently running, please start a tunnel before accessing the dashboard'
+      'ngrok is not currently running, please start a tunnel before accessing the dashboard.'
     );
   }
   const tunnels = await getActiveTunnels(api);
   if (tunnels.length > 0) {
-    const tunnel = await window.showQuickPick([
-      'All',
-      ...tunnels.map((t) => t.public_url),
-    ]);
+    const tunnel = await window.showQuickPick(
+      ['All', ...tunnels.map((t) => t.public_url)],
+      { placeHolder: 'Choose a tunnel to stop' }
+    );
     if (tunnel === 'All') {
       await disconnect();
       await kill();
       window.showInformationMessage(
         'All ngrok tunnels disconnected. ngrok has been shutdown.'
       );
+      hideStatusBarItem();
     } else if (typeof tunnel !== 'undefined') {
       await disconnect(tunnel);
       let message = `ngrok tunnel ${tunnel} disconnected.`;
       if ((await getActiveTunnels(api)).length === 0) {
         await kill();
         message = `${message} ngrok has been shutdown.`;
+        hideStatusBarItem();
       }
       window.showInformationMessage(message);
     }
