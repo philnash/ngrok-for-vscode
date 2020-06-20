@@ -28,6 +28,8 @@ import download = require('ngrok/download');
 import { parse } from 'yaml';
 import * as mkdirp from 'mkdirp';
 
+import { generateQRCode, showQR } from './qr';
+
 type Tunnel = {
   name: string;
   uri: string;
@@ -163,7 +165,8 @@ export const start = async () => {
       const action = await window.showInformationMessage(
         `ngrok is forwarding ${url}.`,
         'Copy to clipboard',
-        'Open in browser'
+        'Open in browser',
+        'Generate QR code'
       );
       switch (action) {
         case 'Copy to clipboard':
@@ -173,6 +176,9 @@ export const start = async () => {
         case 'Open in browser':
           env.openExternal(Uri.parse(url));
           break;
+        case 'Generate QR code':
+          await generateQRCode(url);
+          showQR();
       }
     } catch (error) {
       window.showErrorMessage(`There was an error starting your tunnel.`);
