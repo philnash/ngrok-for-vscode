@@ -3,6 +3,7 @@ import { homedir } from 'os';
 import { join } from 'path';
 
 import { showStatusBarItem, hideStatusBarItem } from './statusBarItem';
+import { showQR, closeQRWebview } from './qr';
 
 const { readFile } = promises;
 
@@ -13,6 +14,8 @@ import {
   QuickPickItem,
   workspace,
   ProgressLocation,
+  WebviewPanel,
+  ViewColumn
 } from 'vscode';
 import {
   connect,
@@ -27,6 +30,8 @@ import { RequestPromise } from 'request-promise-native';
 import download = require('ngrok/download');
 import { parse } from 'yaml';
 import * as mkdirp from 'mkdirp';
+
+let webviewPanel: WebviewPanel | undefined;
 
 type Tunnel = {
   name: string;
@@ -163,7 +168,8 @@ export const start = async () => {
       const action = await window.showInformationMessage(
         `ngrok is forwarding ${url}.`,
         'Copy to clipboard',
-        'Open in browser'
+        'Open in browser',
+        'Generate QR code'
       );
       switch (action) {
         case 'Copy to clipboard':
@@ -172,6 +178,15 @@ export const start = async () => {
           break;
         case 'Open in browser':
           env.openExternal(Uri.parse(url));
+          break;
+        case 'Generate QR code':
+          if (typeof webviewPanel === 'undefined') {
+            webviewPanel = window.createWebviewPanel('ngrok', 'ngrok', ViewColumn.One);
+            webviewPanel.onDidDispose(() => {
+              webviewPanel = undefined;
+            });
+          }
+          await showQR(url, webviewPanel);
           break;
       }
     } catch (error) {
@@ -197,6 +212,7 @@ export const stop = async () => {
     if (tunnel === 'All') {
       await disconnect();
       await kill();
+      closeQRWebview(webviewPanel);
       window.showInformationMessage(
         'All ngrok tunnels disconnected. ngrok has been shutdown.'
       );
@@ -206,6 +222,7 @@ export const stop = async () => {
       let message = `ngrok tunnel ${tunnel} disconnected.`;
       if ((await getActiveTunnels(api)).length === 0) {
         await kill();
+        closeQRWebview(webviewPanel);
         message = `${message} ngrok has been shutdown.`;
         hideStatusBarItem();
       }
