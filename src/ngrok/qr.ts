@@ -15,7 +15,6 @@ export const generateQRCode = async (url: string): Promise<string> => {
 };
 
 const getWebviewContent = (src: Uri) => {
-    console.log(filename);
     return `<!doctype html>
 
     <html lang="en">
