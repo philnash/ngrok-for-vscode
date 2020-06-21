@@ -24,19 +24,40 @@ const getWebviewContent = (url: string, src: string) => {
         align-items: center;
         height: 100%;
       }
+      .qr {
+        width: 100%;
+      }
+      .square {
+        width: 80%;
+        max-width: 300px;
+        position:relative;
+        margin: 0 auto;
+      }
+      .square:after {
+        content: "";
+        display: block;
+        padding-bottom: 100%;
+      }
       svg {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
         display: block;
         border-radius: 5px;
         opacity: 0.8;
         box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.8);
-        width: 80%;
-        max-width: 400px;
       }
     </style>
   </head>
 
   <body>
-    ${src}
+    <div class="qr">
+      <div class="square">
+        ${src}
+      </div>
+    </div>
     <h1><a href="${url}">${url}</a></h1>
   </body>
   </html>`;
