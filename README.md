@@ -53,6 +53,7 @@ See the [CHANGELOG](CHANGELOG.md) for all release notes.
 ### Other contributors
 
 **Michał Mrozek** - [GitHub](https://github.com/Michsior14)
+**Zack Radisic** - [GitHub](https://github.com/zackradisic)
 
 ### Thanks
 
