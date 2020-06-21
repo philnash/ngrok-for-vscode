@@ -8,6 +8,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ...
 
+## [1.6.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.5.0...1.6.0) - 2020-06-21
+
+### Added
+
+- Option to show QR code for a newly opened tunnel (thanks to @zackradisic)
+
 ## [1.5.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.4.0...1.5.0) - 2020-05-18
 
 ### Added

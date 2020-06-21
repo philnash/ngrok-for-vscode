@@ -14,6 +14,10 @@
 
   ![Open the command palette, type 'ngrok: start' and then type the port number](images/start.gif)
 
+  You can choose to copy the URL to the clipboard, open it in a browser or even generate a QR code so that you can easily open it on a mobile device
+
+  ![When you start a tunnel, you can choose to show a QR code which can be scanned by a mobile device](images/start-qr.gif)
+
 - `ngrok: start`: Start a named HTTP tunnel from your ngrok config
 
   ![Open the command palette, type 'ngrok: start' and choose the tunnel from your config.](images/start-named.gif)
@@ -32,11 +36,11 @@ This extension contributes the following settings:
 
 ## Release Notes
 
-## [1.5.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.4.0...1.5.0) - 2020-05-18
+## [1.6.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.5.0...1.6.0) - 2020-06-21
 
 ### Added
 
-- Status Bar Item in VSCode shows when ngrok is running
+- Option to show QR code for a newly opened tunnel (thanks to @zackradisic)
 
 See the [CHANGELOG](CHANGELOG.md) for all release notes.
 
