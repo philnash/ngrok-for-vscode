@@ -169,7 +169,7 @@ export const start = async () => {
         `ngrok is forwarding ${url}.`,
         'Copy to clipboard',
         'Open in browser',
-        'Generate QR code'
+        'Show QR code'
       );
       switch (action) {
         case 'Copy to clipboard':
@@ -179,7 +179,7 @@ export const start = async () => {
         case 'Open in browser':
           env.openExternal(Uri.parse(url));
           break;
-        case 'Generate QR code':
+        case 'Show QR code':
           if (typeof webviewPanel === 'undefined') {
             webviewPanel = window.createWebviewPanel('ngrok', 'ngrok', ViewColumn.One);
             webviewPanel.onDidDispose(() => {
