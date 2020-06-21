@@ -1,44 +1,59 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import { WebviewPanel } from 'vscode';
 import * as QRCode from 'qrcode';
 
-import { window, ViewColumn, Uri } from 'vscode';
-
-const filename = path.join(__dirname, 'qr.png');
-const fileUri = Uri.file(filename);
-
-export const generateQRCode = async (url: string): Promise<string> => {
-  const dataURL = await QRCode.toDataURL(url);
-  const base64 = dataURL.replace('data:image/png;base64,', '');
-  fs.writeFileSync(filename, base64, 'base64');
-  return filename;
+const generateQRCode = (url: string): Promise<string> => {
+  return QRCode.toString(url, {
+    type: 'svg'
+  });
 };
 
-const getWebviewContent = (src: Uri) => {
-    return `<!doctype html>
+const getWebviewContent = (url: string, src: string) => {
+  return `<!doctype html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>ngrok</title>
+    <style>
+      html {
+        height: 100%;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+      }
+      svg {
+        display: block;
+        border-radius: 5px;
+        opacity: 0.8;
+        box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.8);
+        width: 80%;
+        max-width: 400px;
+      }
+    </style>
+  </head>
 
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-    </head>
-    
-    <body>
-        <img src="${src}" style="border-radius: 5px;">
-    </body>
-    </html>`;
+  <body>
+    ${src}
+    <h1><a href="${url}">${url}</a></h1>
+  </body>
+  </html>`;
 };
 
-export const showQR = () => {
-    const panel = window.createWebviewPanel(
-        'ngrok',
-        'ngrok',
-        ViewColumn.One,
-        {
-            localResourceRoots: [
-                Uri.file(__dirname)
-            ]
-        }
-    );
+export const showQR = async (
+  url: string,
+  webviewPanel: WebviewPanel
+): Promise<WebviewPanel> => {
+  const qrCode = await generateQRCode(url);
+  webviewPanel.webview.html = getWebviewContent(url, qrCode);
+  webviewPanel.reveal();
+  return webviewPanel;
+};
 
-    panel.webview.html = getWebviewContent(panel.webview.asWebviewUri(fileUri));
+export const closeQRWebview = (webviewPanel: WebviewPanel | undefined) => {
+  if (webviewPanel) {
+    webviewPanel.dispose();
+  }
 };

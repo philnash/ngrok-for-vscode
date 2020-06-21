@@ -3,6 +3,7 @@ import { homedir } from 'os';
 import { join } from 'path';
 
 import { showStatusBarItem, hideStatusBarItem } from './statusBarItem';
+import { showQR, closeQRWebview } from './qr';
 
 const { readFile } = promises;
 
@@ -13,6 +14,8 @@ import {
   QuickPickItem,
   workspace,
   ProgressLocation,
+  WebviewPanel,
+  ViewColumn
 } from 'vscode';
 import {
   connect,
@@ -28,7 +31,7 @@ import download = require('ngrok/download');
 import { parse } from 'yaml';
 import * as mkdirp from 'mkdirp';
 
-import { generateQRCode, showQR } from './qr';
+let webviewPanel: WebviewPanel | undefined;
 
 type Tunnel = {
   name: string;
@@ -177,8 +180,14 @@ export const start = async () => {
           env.openExternal(Uri.parse(url));
           break;
         case 'Generate QR code':
-          await generateQRCode(url);
-          showQR();
+          if (typeof webviewPanel === 'undefined') {
+            webviewPanel = window.createWebviewPanel('ngrok', 'ngrok', ViewColumn.One);
+            webviewPanel.onDidDispose(() => {
+              webviewPanel = undefined;
+            });
+          }
+          await showQR(url, webviewPanel);
+          break;
       }
     } catch (error) {
       window.showErrorMessage(`There was an error starting your tunnel.`);
@@ -203,6 +212,7 @@ export const stop = async () => {
     if (tunnel === 'All') {
       await disconnect();
       await kill();
+      closeQRWebview(webviewPanel);
       window.showInformationMessage(
         'All ngrok tunnels disconnected. ngrok has been shutdown.'
       );
@@ -212,6 +222,7 @@ export const stop = async () => {
       let message = `ngrok tunnel ${tunnel} disconnected.`;
       if ((await getActiveTunnels(api)).length === 0) {
         await kill();
+        closeQRWebview(webviewPanel);
         message = `${message} ngrok has been shutdown.`;
         hideStatusBarItem();
       }
