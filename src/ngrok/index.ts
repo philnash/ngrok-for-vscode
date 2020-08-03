@@ -11,11 +11,10 @@ import {
   window,
   env,
   Uri,
-  QuickPickItem,
   workspace,
   ProgressLocation,
   WebviewPanel,
-  ViewColumn
+  ViewColumn,
 } from 'vscode';
 import {
   connect,
@@ -33,42 +32,12 @@ import * as mkdirp from 'mkdirp';
 
 let webviewPanel: WebviewPanel | undefined;
 
-type Tunnel = {
-  name: string;
-  uri: string;
-  public_url: string;
-  proto: string;
-  config: { [key: string]: string };
-  metrics: { [key: string]: { [key: string]: number } };
-};
-
-type TunnelsResponse = {
-  tunnels: Tunnel[];
-  uri: string;
-};
-
-type NgrokConfig = {
-  authtoken?: string;
-  region?: string;
-  console_ui?: string | false;
-  console_ui_color?: string;
-  http_proxy?: string;
-  inspect_db_size?: number;
-  log_level?: string;
-  log_format?: string;
-  log?: string | false;
-  metadata?: string;
-  root_cas?: string;
-  socks5_proxy?: string;
-  update?: boolean;
-  update_channel?: string;
-  web_addr?: string | false;
-  tunnels?: { [key: string]: INgrokOptions };
-};
-
-type TunnelQuickPickItem = QuickPickItem & {
-  tunnelOptions: INgrokOptions;
-};
+import {
+  NgrokConfig,
+  Tunnel,
+  TunnelQuickPickItem,
+  TunnelsResponse,
+} from './types';
 
 const DEFAULT_CONFIG_PATH = join(homedir(), '.ngrok2', 'ngrok.yml');
 
@@ -181,7 +150,11 @@ export const start = async () => {
           break;
         case 'Show QR code':
           if (typeof webviewPanel === 'undefined') {
-            webviewPanel = window.createWebviewPanel('ngrok', 'ngrok', ViewColumn.One);
+            webviewPanel = window.createWebviewPanel(
+              'ngrok',
+              'ngrok',
+              ViewColumn.One
+            );
             webviewPanel.onDidDispose(() => {
               webviewPanel = undefined;
             });
