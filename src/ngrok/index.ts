@@ -218,6 +218,11 @@ export const dashboard = () => {
   }
 };
 
+export const editSettings = () => {
+  const configPath = Uri.file(getConfigPath());
+  window.showTextDocument(configPath);
+};
+
 export const downloadBinary = () => {
   const basePath = join(__dirname, 'bin');
   const binaryLocations = [

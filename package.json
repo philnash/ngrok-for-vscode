@@ -34,7 +34,8 @@
   "activationEvents": [
     "onCommand:ngrok-for-vscode.start",
     "onCommand:ngrok-for-vscode.stop",
-    "onCommand:ngrok-for-vscode.dashboard"
+    "onCommand:ngrok-for-vscode.dashboard",
+    "onCommand:ngrok-for-vscode.editSettings"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -52,6 +53,11 @@
       {
         "command": "ngrok-for-vscode.dashboard",
         "title": "dashboard",
+        "category": "ngrok"
+      },
+      {
+        "command": "ngrok-for-vscode.editSettings",
+        "title": "edit ngrok settings",
         "category": "ngrok"
       }
     ],
