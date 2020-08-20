@@ -210,7 +210,7 @@ export const stop = async () => {
 export const dashboard = () => {
   const api = getApi();
   const url = getUrl();
-  if (api && typeof url !== 'undefined') {
+  if (api && typeof url !== 'undefined' && url !== null) {
     return env.openExternal(Uri.parse(url));
   } else {
     return window.showErrorMessage(
@@ -235,6 +235,21 @@ export const editSettings = async () => {
         'Could not open your ngrok settings file.'
       );
     }
+  }
+};
+
+export const setAuthToken = async () => {
+  const newAuthToken = await window.showInputBox({
+    prompt: 'Enter your ngrok auth token.',
+  });
+  if (typeof newAuthToken !== 'undefined') {
+    await authtoken({
+      authtoken: newAuthToken,
+      configPath: getConfigPath(),
+    });
+    return window.showInformationMessage(
+      'Your auth token has been saved to your ngrok settings.'
+    );
   }
 };
 

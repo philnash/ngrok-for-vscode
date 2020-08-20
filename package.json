@@ -35,7 +35,8 @@
     "onCommand:ngrok-for-vscode.start",
     "onCommand:ngrok-for-vscode.stop",
     "onCommand:ngrok-for-vscode.dashboard",
-    "onCommand:ngrok-for-vscode.editSettings"
+    "onCommand:ngrok-for-vscode.editSettings",
+    "onCommand:ngrok-for-vscode.setAuthToken"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -58,6 +59,11 @@
       {
         "command": "ngrok-for-vscode.editSettings",
         "title": "edit ngrok settings",
+        "category": "ngrok"
+      },
+      {
+        "command": "ngrok-for-vscode.setAuthToken",
+        "title": "set auth token",
         "category": "ngrok"
       }
     ],
