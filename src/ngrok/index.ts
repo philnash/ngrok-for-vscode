@@ -14,6 +14,7 @@ import {
   workspace,
   ProgressLocation,
   WebviewPanel,
+  WorkspaceEdit,
   ViewColumn,
 } from 'vscode';
 import {
@@ -218,9 +219,23 @@ export const dashboard = () => {
   }
 };
 
-export const editSettings = () => {
+export const editSettings = async () => {
   const configPath = Uri.file(getConfigPath());
-  window.showTextDocument(configPath);
+  try {
+    await window.showTextDocument(configPath);
+  } catch (error) {
+    try {
+      const wsedit = new WorkspaceEdit();
+      wsedit.createFile(configPath);
+      await workspace.applyEdit(wsedit);
+      return window.showTextDocument(configPath);
+    } catch (error) {
+      console.error(error);
+      return window.showErrorMessage(
+        'Could not open your ngrok settings file.'
+      );
+    }
+  }
 };
 
 export const downloadBinary = () => {
