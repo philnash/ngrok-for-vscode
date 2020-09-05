@@ -4,9 +4,16 @@ All notable changes to the "ngrok-for-vscode" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.5.0...HEAD)
+## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.7.0...HEAD)
 
 ...
+
+## [1.7.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.6.0...1.7.0) - 2020-09-05
+
+### Added
+
+- Command to open ngrok settings
+- Command to add auth token to ngrok settings
 
 ## [1.6.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.5.0...1.6.0) - 2020-06-21
 

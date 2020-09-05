@@ -36,11 +36,12 @@ This extension contributes the following settings:
 
 ## Release Notes
 
-## [1.6.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.5.0...1.6.0) - 2020-06-21
+## [1.7.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.6.0...1.7.0) - 2020-09-05
 
 ### Added
 
-- Option to show QR code for a newly opened tunnel (thanks to @zackradisic)
+- Command to open ngrok settings
+- Command to add auth token to ngrok settings
 
 See the [CHANGELOG](CHANGELOG.md) for all release notes.
 
