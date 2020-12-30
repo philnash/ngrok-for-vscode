@@ -36,12 +36,15 @@ This extension contributes the following settings:
 
 ## Release Notes
 
-## [1.7.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.6.0...1.7.0) - 2020-09-05
+### [1.8.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.7.0...1.8.0) - 2020-12-31
 
-### Added
+#### Added
 
-- Command to open ngrok settings
-- Command to add auth token to ngrok settings
+- Shows the currently running version of the ngrok binary in the status bar
+
+#### Changed
+
+- Updates ngrok npm module
 
 See the [CHANGELOG](CHANGELOG.md) for all release notes.
 

@@ -4,9 +4,19 @@ All notable changes to the "ngrok-for-vscode" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.7.0...HEAD)
+## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.8.0...HEAD)
 
 ...
+
+## [1.8.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.7.0...1.8.0) - 2020-12-31
+
+### Added
+
+- Shows the currently running version of the ngrok binary in the status bar
+
+### Changed
+
+- Updates ngrok npm module
 
 ## [1.7.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.6.0...1.7.0) - 2020-09-05
 
