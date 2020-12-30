@@ -1,10 +1,13 @@
 import { window, StatusBarItem, StatusBarAlignment } from 'vscode';
-
 let statusBarItem: StatusBarItem;
 
-export const createStatusBarItem = (commandId: string) => {
+export const createStatusBarItem = (commandId: string, version?: string) => {
   statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
-  statusBarItem.text = '$(globe) ngrok';
+  let statusBarText = '$(globe) ngrok';
+  if (version) {
+    statusBarText += ` (v${version})`;
+  }
+  statusBarItem.text = statusBarText;
   statusBarItem.tooltip = 'ngrok is running';
   statusBarItem.command = commandId;
   return statusBarItem;

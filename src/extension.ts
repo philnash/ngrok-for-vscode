@@ -1,4 +1,5 @@
-import { kill } from 'ngrok';
+// Need to release a new ngrok with the types for getVersion
+import { kill, getVersion } from 'ngrok';
 import { commands, ExtensionContext } from 'vscode';
 
 import {
@@ -15,6 +16,7 @@ const namespace = 'ngrok-for-vscode';
 
 export async function activate(context: ExtensionContext) {
   await downloadBinary();
+  const version = await getVersion();
 
   context.subscriptions.push(
     commands.registerCommand(`${namespace}.start`, start)
@@ -36,7 +38,7 @@ export async function activate(context: ExtensionContext) {
     commands.registerCommand(`${namespace}.setAuthToken`, setAuthToken)
   );
 
-  context.subscriptions.push(createStatusBarItem(`${namespace}.stop`));
+  context.subscriptions.push(createStatusBarItem(`${namespace}.stop`, version));
 }
 
 export async function deactivate() {
