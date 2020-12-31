@@ -1,4 +1,3 @@
-// Need to release a new ngrok with the types for getVersion
 import { kill, getVersion } from 'ngrok';
 import { commands, ExtensionContext } from 'vscode';
 
