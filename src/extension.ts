@@ -16,7 +16,10 @@ const namespace = 'ngrok-for-vscode';
 
 export async function activate(context: ExtensionContext) {
   await downloadBinary();
-  const version = await getVersion();
+  let version;
+  try {
+    version = await getVersion();
+  } catch (e) {}
 
   context.subscriptions.push(
     commands.registerCommand(`${namespace}.start`, start)
