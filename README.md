@@ -36,15 +36,11 @@ This extension contributes the following settings:
 
 ## Release Notes
 
-### [1.8.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.7.0...1.8.0) - 2020-12-31
+### [1.8.3](https://github.com/philnash/ngrok-for-vscode/compare/v1.8.2...1.8.3) - 2021-01-01
 
 #### Added
 
-- Shows the currently running version of the ngrok binary in the status bar
-
-#### Changed
-
-- Updates ngrok npm module
+- An npm script so that I stop messing up packaging
 
 See the [CHANGELOG](CHANGELOG.md) for all release notes.
 

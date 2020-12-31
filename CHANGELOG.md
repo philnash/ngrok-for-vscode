@@ -4,9 +4,25 @@ All notable changes to the "ngrok-for-vscode" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.8.0...HEAD)
+## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.8.3...HEAD)
 
 ...
+
+## [1.8.3](https://github.com/philnash/ngrok-for-vscode/compare/v1.8.2...1.8.3) - 2021-01-01
+
+### Added
+
+- An npm script so that I stop messing up packaging
+
+## [1.8.2](https://github.com/philnash/ngrok-for-vscode/compare/v1.8.1...1.8.2) - 2021-01-01
+
+### Changed
+
+- If the extension cannot get the version of the ngrok binary the failure is handled
+
+## [1.8.1](https://github.com/philnash/ngrok-for-vscode/compare/v1.8.0...1.8.1) - 2020-12-31
+
+Nothing happened, 1.8.1 was released to change the deploy branch from master to main.
 
 ## [1.8.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.7.0...1.8.0) - 2020-12-31
 
