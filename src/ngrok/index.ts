@@ -125,9 +125,9 @@ const getTunnelToStart: (
     quickPick.show();
   });
 
-export const start = async () => {
+export const start = async (options?: Ngrok.Options) => {
   const config = await getConfig();
-  const tunnel = await getTunnelToStart(config);
+  const tunnel = options || (await getTunnelToStart(config));
   if (typeof tunnel !== 'undefined') {
     const configPath = getConfigPath();
     if (existsSync(configPath)) {
@@ -177,20 +177,21 @@ export const start = async () => {
   }
 };
 
-export const stop = async () => {
+export const stop = async (tunnel?: string) => {
   const api = getApi();
   if (!api) {
-    return window.showErrorMessage(
-      'ngrok is not currently running, please start a tunnel before accessing the dashboard.'
-    );
+    return window.showErrorMessage('ngrok is not currently running.');
   }
   try {
     const tunnels = await getActiveTunnels(api);
     if (tunnels.length > 0) {
-      const tunnel = await window.showQuickPick(
-        ['All', ...tunnels.map((t) => t.public_url)],
-        { placeHolder: 'Choose a tunnel to stop' }
-      );
+      tunnel =
+        tunnel ||
+        (await window.showQuickPick(
+          ['All', ...tunnels.map((t) => t.public_url)],
+          { placeHolder: 'Choose a tunnel to stop' }
+        ));
+
       if (tunnel === 'All') {
         try {
           await disconnect();
