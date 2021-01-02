@@ -114,7 +114,7 @@ const getTunnelToStart: (
     });
     quickPick.onDidHide(() => {
       quickPick.dispose();
-      resolve();
+      resolve(undefined);
     });
     quickPick.onDidAccept(() => {
       const selection = quickPick.activeItems[0] as TunnelQuickPickItem;
@@ -272,7 +272,7 @@ export const downloadBinary = () => {
       async () => {
         await mkdirp(basePath);
         try {
-          await new Promise((resolve, reject) =>
+          await new Promise<void>((resolve, reject) =>
             download((error) => (error ? reject(error) : resolve()))
           );
         } catch (error) {
