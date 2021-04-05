@@ -1,6 +1,6 @@
 {
   "name": "ngrok-for-vscode",
-  "version": "1.8.4",
+  "version": "1.9.0",
   "displayName": "ngrok for VSCode",
   "description": "A VSCode extension to control ngrok from the command palette.",
   "keywords": [
