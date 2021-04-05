@@ -23,27 +23,27 @@ import {
   kill,
   getUrl,
   getApi,
-  INgrokOptions,
+  Ngrok,
   authtoken,
+  NgrokClient,
 } from 'ngrok';
-import { RequestPromise } from 'request-promise-native';
 import download = require('ngrok/download');
 import { parse } from 'yaml';
 import * as mkdirp from 'mkdirp';
 
+const basePath = join(__dirname, 'bin');
+// eslint-disable-next-line
+export const binPath = (_defaultPath: string) => basePath;
+
 let webviewPanel: WebviewPanel | undefined;
 
-import {
-  NgrokConfig,
-  Tunnel,
-  TunnelQuickPickItem,
-  TunnelsResponse,
-} from './types';
+import { NgrokConfig, TunnelQuickPickItem } from './types';
 
 const DEFAULT_CONFIG_PATH = join(homedir(), '.ngrok2', 'ngrok.yml');
 
-const getConfigPath = () => {
-  let { configPath } = workspace.getConfiguration('ngrokForVSCode');
+const getConfigPath = (): string => {
+  const config = workspace.getConfiguration('ngrokForVSCode');
+  let configPath: string = config.configPath;
   if (configPath === '') {
     configPath = DEFAULT_CONFIG_PATH;
   }
@@ -55,7 +55,7 @@ const getConfig: () => Promise<NgrokConfig | undefined> = async () => {
   try {
     const config = parse(await readFile(configPath, 'utf8'));
     if (typeof config.authtoken !== 'undefined') {
-      await authtoken(config.authtoken);
+      await authtoken({ authtoken: config.authtoken, binPath });
     }
     return config;
   } catch (error) {
@@ -69,7 +69,7 @@ const getConfig: () => Promise<NgrokConfig | undefined> = async () => {
   }
 };
 
-const tunnelsFromConfig = (tunnels: { [key: string]: INgrokOptions }) => {
+const tunnelsFromConfig = (tunnels: { [key: string]: Ngrok.Options }) => {
   return Object.keys(tunnels).map((tunnelName) => {
     return {
       label: tunnelName,
@@ -78,16 +78,16 @@ const tunnelsFromConfig = (tunnels: { [key: string]: INgrokOptions }) => {
   });
 };
 
-const getActiveTunnels: (api: any) => Promise<Tunnel[]> = async (api: any) => {
-  const response = await (api.get('api/tunnels', {
-    json: true,
-  }) as RequestPromise<TunnelsResponse>);
+const getActiveTunnels: (api: NgrokClient) => Promise<Ngrok.Tunnel[]> = async (
+  api: NgrokClient
+) => {
+  const response = await api.listTunnels();
   return response.tunnels;
 };
 
 const getTunnelToStart: (
   config: NgrokConfig | undefined
-) => Promise<INgrokOptions | undefined> = (config) =>
+) => Promise<Ngrok.Options | undefined> = (config) =>
   new Promise((resolve) => {
     const quickPick = window.createQuickPick();
     let items: TunnelQuickPickItem[];
@@ -133,35 +133,41 @@ export const start = async () => {
       tunnel.configPath = configPath;
     }
     try {
-      const url = await connect(tunnel);
-      showStatusBarItem();
-      const action = await window.showInformationMessage(
-        `ngrok is forwarding ${url}.`,
-        'Copy to clipboard',
-        'Open in browser',
-        'Show QR code'
-      );
-      switch (action) {
-        case 'Copy to clipboard':
-          await env.clipboard.writeText(url);
-          window.showInformationMessage(`Copied "${url}" to your clipboard.`);
-          break;
-        case 'Open in browser':
-          env.openExternal(Uri.parse(url));
-          break;
-        case 'Show QR code':
-          if (typeof webviewPanel === 'undefined') {
-            webviewPanel = window.createWebviewPanel(
-              'ngrok',
-              'ngrok',
-              ViewColumn.One
-            );
-            webviewPanel.onDidDispose(() => {
-              webviewPanel = undefined;
-            });
-          }
-          await showQR(url, webviewPanel);
-          break;
+      tunnel.binPath = binPath;
+      try {
+        const url = await connect(tunnel);
+        showStatusBarItem();
+        const action = await window.showInformationMessage(
+          `ngrok is forwarding ${url}.`,
+          'Copy to clipboard',
+          'Open in browser',
+          'Show QR code'
+        );
+        switch (action) {
+          case 'Copy to clipboard':
+            await env.clipboard.writeText(url);
+            window.showInformationMessage(`Copied "${url}" to your clipboard.`);
+            break;
+          case 'Open in browser':
+            env.openExternal(Uri.parse(url));
+            break;
+          case 'Show QR code':
+            if (typeof webviewPanel === 'undefined') {
+              webviewPanel = window.createWebviewPanel(
+                'ngrok',
+                'ngrok',
+                ViewColumn.One
+              );
+              webviewPanel.onDidDispose(() => {
+                webviewPanel = undefined;
+              });
+            }
+            await showQR(url, webviewPanel);
+            break;
+        }
+      } catch (error) {
+        window.showErrorMessage(`There was an error starting your tunnel.`);
+        console.error(error);
       }
     } catch (error) {
       window.showErrorMessage(`There was an error starting your tunnel.`);
@@ -254,7 +260,6 @@ export const setAuthToken = async () => {
 };
 
 export const downloadBinary = () => {
-  const basePath = join(__dirname, 'bin');
   const binaryLocations = [
     join(basePath, 'ngrok'),
     join(basePath, 'ngrok.exe'),
