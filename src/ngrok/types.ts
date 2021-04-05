@@ -1,17 +1,8 @@
 import { QuickPickItem } from 'vscode';
-import { INgrokOptions } from 'ngrok';
-
-export type Tunnel = {
-  name: string;
-  uri: string;
-  public_url: string;
-  proto: string;
-  config: { [key: string]: string };
-  metrics: { [key: string]: { [key: string]: number } };
-};
+import { Ngrok } from 'ngrok';
 
 export type TunnelsResponse = {
-  tunnels: Tunnel[];
+  tunnels: Ngrok.Tunnel[];
   uri: string;
 };
 
@@ -31,9 +22,9 @@ export type NgrokConfig = {
   update?: boolean;
   update_channel?: string;
   web_addr?: string | false;
-  tunnels?: { [key: string]: INgrokOptions };
+  tunnels?: { [key: string]: Ngrok.Options };
 };
 
 export type TunnelQuickPickItem = QuickPickItem & {
-  tunnelOptions: INgrokOptions;
+  tunnelOptions: Ngrok.Options;
 };

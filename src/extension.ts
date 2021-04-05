@@ -8,6 +8,7 @@ import {
   stop,
   editSettings,
   setAuthToken,
+  binPath,
 } from './ngrok';
 import { createStatusBarItem } from './ngrok/statusBarItem';
 
@@ -15,9 +16,9 @@ const namespace = 'ngrok-for-vscode';
 
 export async function activate(context: ExtensionContext) {
   await downloadBinary();
-  let version;
+  let version = '';
   try {
-    version = await getVersion();
+    version = await getVersion({ binPath });
   } catch (e) {}
 
   context.subscriptions.push(
