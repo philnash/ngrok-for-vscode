@@ -54,7 +54,7 @@ const getConfig: () => Promise<NgrokConfig | undefined> = async () => {
   const configPath = getConfigPath();
   try {
     const config = parse(await readFile(configPath, 'utf8'));
-    if (typeof config.authtoken !== 'undefined') {
+    if (config && typeof config.authtoken !== 'undefined') {
       await authtoken({ authtoken: config.authtoken, binPath });
     }
     return config;
