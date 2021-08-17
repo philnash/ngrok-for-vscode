@@ -114,7 +114,7 @@
   },
   "dependencies": {
     "mkdirp": "^1.0.4",
-    "ngrok": "^4.0.1",
+    "ngrok": "^4.1.0",
     "qrcode": "^1.4.4",
     "yaml": "^1.8.3"
   },
