@@ -8,6 +8,7 @@
     "rootDir": "src",
     "types": ["node"],
     "baseUrl": ".",
+    "esModuleInterop": true,
     "paths": {
       "*": ["types/*", "node_modules/*", "src/*"]
     },

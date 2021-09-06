@@ -27,9 +27,9 @@ import {
   authtoken,
   NgrokClient,
 } from 'ngrok';
-import download = require('ngrok/download');
+import download from 'ngrok/download';
 import { parse } from 'yaml';
-import * as mkdirp from 'mkdirp';
+import mkdirp from 'mkdirp';
 
 const basePath = join(__dirname, 'bin');
 // eslint-disable-next-line
