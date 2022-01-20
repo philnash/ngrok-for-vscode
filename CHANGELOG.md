@@ -4,9 +4,26 @@ All notable changes to the "ngrok-for-vscode" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.0...HEAD)
+## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.2...HEAD)
 
 ...
+
+## [1.9.2](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.1...v1.9.2) - 2022-01-20
+
+### Changed
+
+- Upgraded to ngrok 4.3.0
+- Handles TypeScript not casting errors as errors
+
+## [1.9.1](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.0...v1.9.1) - 2021-07-14
+
+### Changed
+
+- Updated dependencies
+
+### Fixed 
+
+- No longer crashes when a config file is preset but empty
 
 ## [1.9.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.8.4...v1.9.0) - 2021-04-05
 

@@ -36,14 +36,12 @@ This extension contributes the following settings:
 
 ## Release Notes
 
-### [1.9.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.8.4...v1.9.0) - 2021-04-05
+### [1.9.2](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.1...v1.9.2) - 2022-01-20
 
 #### Changed
 
-- Updated ngrok to 4.0.1
-- Updated webpack to 5.30.0 and webpack-cli to 4.6.0
-- Updated ts-loader to 8.1.0
-- Updated mocha to 8.3.2
+- Upgraded to ngrok 4.3.0
+- Handles TypeScript not casting errors as errors
 
 See the [CHANGELOG](CHANGELOG.md) for all release notes.
 
