@@ -2,6 +2,7 @@ import { existsSync, promises } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 
+import { isError } from './error';
 import { showStatusBarItem, hideStatusBarItem } from './statusBarItem';
 import { showQR, closeQRWebview } from './qr';
 
@@ -59,7 +60,7 @@ const getConfig: () => Promise<NgrokConfig | undefined> = async () => {
     }
     return config;
   } catch (error) {
-    if (error.code === 'ENOENT') {
+    if (isError(error) && error.code === 'ENOENT') {
       if (configPath !== DEFAULT_CONFIG_PATH) {
         window.showErrorMessage(`Could not find config file at ${configPath}.`);
       }
