@@ -9,6 +9,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Changed
 
 - Updated dependencies
+- Allowed for start and stop commands to receive arguments from other extension. Fixes #21
 
 ## [1.9.2](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.1...v1.9.2) - 2022-01-20
 
