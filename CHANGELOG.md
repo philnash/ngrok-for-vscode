@@ -6,7 +6,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.2...HEAD)
 
-...
+### Changed
+
+- Updated dependencies
 
 ## [1.9.2](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.1...v1.9.2) - 2022-01-20
 
@@ -21,7 +23,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - Updated dependencies
 
-### Fixed 
+### Fixed
 
 - No longer crashes when a config file is preset but empty
 
