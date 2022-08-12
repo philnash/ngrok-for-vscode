@@ -184,33 +184,52 @@ export const stop = async () => {
       'ngrok is not currently running, please start a tunnel before accessing the dashboard.'
     );
   }
-  const tunnels = await getActiveTunnels(api);
-  if (tunnels.length > 0) {
-    const tunnel = await window.showQuickPick(
-      ['All', ...tunnels.map((t) => t.public_url)],
-      { placeHolder: 'Choose a tunnel to stop' }
-    );
-    if (tunnel === 'All') {
-      await disconnect();
-      await kill();
-      closeQRWebview(webviewPanel);
-      window.showInformationMessage(
-        'All ngrok tunnels disconnected. ngrok has been shutdown.'
+  try {
+    const tunnels = await getActiveTunnels(api);
+    if (tunnels.length > 0) {
+      const tunnel = await window.showQuickPick(
+        ['All', ...tunnels.map((t) => t.public_url)],
+        { placeHolder: 'Choose a tunnel to stop' }
       );
-      hideStatusBarItem();
-    } else if (typeof tunnel !== 'undefined') {
-      await disconnect(tunnel);
-      let message = `ngrok tunnel ${tunnel} disconnected.`;
-      if ((await getActiveTunnels(api)).length === 0) {
-        await kill();
-        closeQRWebview(webviewPanel);
-        message = `${message} ngrok has been shutdown.`;
-        hideStatusBarItem();
+      if (tunnel === 'All') {
+        try {
+          await disconnect();
+          await kill();
+          closeQRWebview(webviewPanel);
+          window.showInformationMessage(
+            'All ngrok tunnels disconnected. ngrok has been shutdown.'
+          );
+          hideStatusBarItem();
+        } catch (error) {
+          window.showErrorMessage(
+            'There was an issue closing the ngrok tunnels, check the log for details.'
+          );
+          console.error(error);
+        }
+      } else if (typeof tunnel !== 'undefined') {
+        try {
+          await disconnect(tunnel);
+          let message = `ngrok tunnel ${tunnel} disconnected.`;
+          if ((await getActiveTunnels(api)).length === 0) {
+            await kill();
+            closeQRWebview(webviewPanel);
+            message = `${message} ngrok has been shutdown.`;
+            hideStatusBarItem();
+          }
+          window.showInformationMessage(message);
+        } catch (error) {
+          window.showErrorMessage(
+            `There was a problem stopping the tunnel ${tunnel}, see the log for details.`
+          );
+          console.error(error);
+        }
       }
-      window.showInformationMessage(message);
+    } else {
+      window.showInformationMessage('There are no active ngrok tunnels.');
     }
-  } else {
-    window.showInformationMessage('There are no active ngrok tunnels.');
+  } catch (error) {
+    window.showErrorMessage('Could not get active tunnels from ngrok.');
+    console.error(error);
   }
 };
 
