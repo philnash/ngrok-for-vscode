@@ -4,7 +4,11 @@ All notable changes to the "ngrok-for-vscode" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.2...HEAD)
+## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.10.0...HEAD)
+
+...
+
+## [1.10.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.2...1.10.0)
 
 ### Changed
 
