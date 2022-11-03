@@ -33,8 +33,8 @@ import { parse } from 'yaml';
 import mkdirp from 'mkdirp';
 
 const basePath = join(__dirname, 'bin');
-// eslint-disable-next-line
-export const binPath = (_defaultPath: string) => basePath;
+
+export const binPath = () => basePath;
 
 let webviewPanel: WebviewPanel | undefined;
 

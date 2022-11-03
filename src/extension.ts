@@ -19,7 +19,9 @@ export async function activate(context: ExtensionContext) {
   let version = '';
   try {
     version = await getVersion({ binPath });
-  } catch (e) {}
+  } catch (e) {
+    // Version will just be empty string
+  }
 
   context.subscriptions.push(
     commands.registerCommand(`${namespace}.start`, start)

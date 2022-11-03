@@ -7,6 +7,7 @@
   },
   "plugins": ["@typescript-eslint"],
   "extends": [
+    "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
     "prettier"
@@ -24,5 +25,8 @@
     "eqeqeq": "warn",
     "no-throw-literal": "warn",
     "semi": "off"
+  },
+  "globals": {
+    "NodeJS": true
   }
 }
