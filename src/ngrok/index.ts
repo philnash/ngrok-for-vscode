@@ -193,43 +193,51 @@ export const stop = async (tunnel?: string) => {
         ));
 
       if (tunnel === 'All') {
-        try {
-          await disconnect();
-          await kill();
-          closeQRWebview(webviewPanel);
-          window.showInformationMessage(
-            'All ngrok tunnels disconnected. ngrok has been shutdown.'
-          );
-          hideStatusBarItem();
-        } catch (error) {
-          window.showErrorMessage(
-            'There was an issue closing the ngrok tunnels, check the log for details.'
-          );
-          console.error(error);
-        }
+        await closeAllTunnels();
       } else if (typeof tunnel !== 'undefined') {
-        try {
-          await disconnect(tunnel);
-          let message = `ngrok tunnel ${tunnel} disconnected.`;
-          if ((await getActiveTunnels(api)).length === 0) {
-            await kill();
-            closeQRWebview(webviewPanel);
-            message = `${message} ngrok has been shutdown.`;
-            hideStatusBarItem();
-          }
-          window.showInformationMessage(message);
-        } catch (error) {
-          window.showErrorMessage(
-            `There was a problem stopping the tunnel ${tunnel}, see the log for details.`
-          );
-          console.error(error);
-        }
+        await closeTunnel(tunnel, api);
       }
     } else {
       window.showInformationMessage('There are no active ngrok tunnels.');
     }
   } catch (error) {
     window.showErrorMessage('Could not get active tunnels from ngrok.');
+    console.error(error);
+  }
+};
+
+const closeTunnel = async (tunnel: string, api: NgrokClient) => {
+  try {
+    await disconnect(tunnel);
+    let message = `ngrok tunnel ${tunnel} disconnected.`;
+    if ((await getActiveTunnels(api)).length === 0) {
+      await kill();
+      closeQRWebview(webviewPanel);
+      message = `${message} ngrok has been shutdown.`;
+      hideStatusBarItem();
+    }
+    window.showInformationMessage(message);
+  } catch (error) {
+    window.showErrorMessage(
+      `There was a problem stopping the tunnel ${tunnel}, see the log for details.`
+    );
+    console.error(error);
+  }
+};
+
+const closeAllTunnels = async () => {
+  try {
+    await disconnect();
+    await kill();
+    closeQRWebview(webviewPanel);
+    window.showInformationMessage(
+      'All ngrok tunnels disconnected. ngrok has been shutdown.'
+    );
+    hideStatusBarItem();
+  } catch (error) {
+    window.showErrorMessage(
+      'There was an issue closing the ngrok tunnels, check the log for details.'
+    );
     console.error(error);
   }
 };
@@ -287,7 +295,6 @@ export const downloadBinary = () => {
   ];
   if (binaryLocations.some((path) => existsSync(path))) {
     console.info('ngrok binary is already downloaded');
-    return;
   } else {
     return window.withProgress(
       {

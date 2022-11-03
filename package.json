@@ -100,6 +100,7 @@
     "@typescript-eslint/parser": "^5.35.1",
     "eslint": "^8.23.0",
     "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-sonarjs": "^0.16.0",
     "glob": "^8.0.3",
     "mocha": "^10.0.0",
     "prettier": "^2.7.1",
