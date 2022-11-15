@@ -7,6 +7,10 @@
     <a href="https://github.com/philnash/ngrok-for-vscode/actions"><img src="https://img.shields.io/github/workflow/status/philnash/ngrok-for-vscode/Tests.svg?logo=github&label=Tests" alt="GitHub Actions CI status" /></a>
     <a href="https://sonarcloud.io/summary/new_code?id=philnash_ngrok-for-vscode"><img src="https://sonarcloud.io/api/project_badges/measure?project=philnash_ngrok-for-vscode&metric=sqale_rating" alt="SonarCloud Maintainability Rating" /></a>
   </p>
+  <hr />
+  <p><em>If you enjoy using this extension, please consider sponsoring it on GitHub</em></p>
+  <p><a href="https://github.com/sponsors/philnash"><img src="https://img.shields.io/badge/Sponsor%20this%20project%20on%20GitHub-%E2%9D%A4%EF%B8%8F-blue" alt="Sponsor this project on GitHub" /></a></p>
+  <hr />
 </div>
 
 ## Features
