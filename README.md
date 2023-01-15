@@ -3,8 +3,8 @@
   <h1>ngrok for vscode</h1>
   <p><em>A VSCode extension for controlling <a href="https://ngrok.com/">ngrok</a> from the command palette.</em></p>
   <p>
-    <a href="https://marketplace.visualstudio.com/items?itemName=philnash.ngrok-for-vscode"><img src="https://vsmarketplacebadge.apphb.com/version-short/philnash.ngrok-for-vscode.svg?label=ngrok%20for%20VSCode&color=blue&logo=visual-studio-code" alt="VSCode Marketplace badge" /></a>
-    <a href="https://github.com/philnash/ngrok-for-vscode/actions"><img src="https://img.shields.io/github/workflow/status/philnash/ngrok-for-vscode/Tests.svg?logo=github&label=Tests" alt="GitHub Actions CI status" /></a>
+    <a href="https://marketplace.visualstudio.com/items?itemName=philnash.ngrok-for-vscode"><img alt="Visual Studio Marketplace Version" src="https://img.shields.io/visual-studio-marketplace/v/philnash.ngrok-for-vscode?label=ngrok%20for%20VS%20Code&logo=visual-studio-code"></a>
+    <a href="https://github.com/philnash/ngrok-for-vscode/actions"><img src="https://img.shields.io/github/actions/workflow/status/philnash/ngrok-for-vscode/ci.yml?logo=github&label=Tests" alt="GitHub Actions CI status" /></a>
     <a href="https://sonarcloud.io/summary/new_code?id=philnash_ngrok-for-vscode"><img src="https://sonarcloud.io/api/project_badges/measure?project=philnash_ngrok-for-vscode&metric=sqale_rating" alt="SonarCloud Maintainability Rating" /></a>
   </p>
   <hr />
