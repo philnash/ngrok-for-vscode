@@ -78,6 +78,9 @@
       }
     }
   },
+  "sponsor": {
+    "url": "https://github.com/sponsors/philnash/"
+  },
   "scripts": {
     "publish": "vsce publish --githubBranch main",
     "vscode:prepublish": "webpack --mode production",
