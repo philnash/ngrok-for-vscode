@@ -30,7 +30,7 @@ import {
 } from 'ngrok';
 import download from 'ngrok/download';
 import { parse } from 'yaml';
-import mkdirp from 'mkdirp';
+import { mkdirp } from 'mkdirp';
 
 const basePath = join(__dirname, 'bin');
 
