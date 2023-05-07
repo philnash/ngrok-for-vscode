@@ -29,5 +29,6 @@
   },
   "globals": {
     "NodeJS": true
-  }
+  },
+  "ignorePatterns": ["dist/", "out/", "**/*.js"]
 }
