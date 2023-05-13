@@ -117,7 +117,7 @@
   "dependencies": {
     "mkdirp": "^3.0.1",
     "ngrok": "^4.3.1",
-    "qrcode": "^1.5.1",
+    "qrcode": "^1.5.3",
     "yaml": "^2.2.2"
   },
   "license": "MIT"
