@@ -1,51 +1,17 @@
-import { kill, getVersion } from 'ngrok';
-import { commands, ExtensionContext } from 'vscode';
+import { commands, ExtensionContext, window } from "vscode";
+import { setAuthToken, start, stop } from "./ngrok";
 
-import {
-  dashboard,
-  downloadBinary,
-  start,
-  stop,
-  editSettings,
-  setAuthToken,
-  binPath,
-} from './ngrok';
-import { createStatusBarItem } from './ngrok/statusBarItem';
-
-const namespace = 'ngrok-for-vscode';
-
-export async function activate(context: ExtensionContext) {
-  await downloadBinary();
-  let version = '';
-  try {
-    version = await getVersion({ binPath });
-  } catch (e) {
-    // Version will just be empty string
-  }
-
+export function activate(context: ExtensionContext) {
   context.subscriptions.push(
-    commands.registerCommand(`${namespace}.start`, start)
+    commands.registerCommand("ngrok-for-vscode.start", start),
   );
-
   context.subscriptions.push(
-    commands.registerCommand(`${namespace}.stop`, stop)
+    commands.registerCommand("ngrok-for-vscode.stop", stop),
   );
-
   context.subscriptions.push(
-    commands.registerCommand(`${namespace}.dashboard`, dashboard)
+    commands.registerCommand("ngrok-for-vscode.setAuthToken", setAuthToken),
   );
-
-  context.subscriptions.push(
-    commands.registerCommand(`${namespace}.editSettings`, editSettings)
-  );
-
-  context.subscriptions.push(
-    commands.registerCommand(`${namespace}.setAuthToken`, setAuthToken)
-  );
-
-  context.subscriptions.push(createStatusBarItem(`${namespace}.stop`, version));
 }
 
-export async function deactivate() {
-  await kill();
-}
+// This method is called when your extension is deactivated
+export function deactivate() {}
