@@ -65,7 +65,7 @@
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint && npm run format:check",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
     "format": "prettier --write '*.json' src",
