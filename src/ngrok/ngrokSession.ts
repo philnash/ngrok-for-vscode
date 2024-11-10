@@ -27,8 +27,8 @@ export class NgrokSession {
     if (url === "All") {
       await Promise.all(activeListeners.map((listener) => listener.close()));
     } else {
-      const listener = activeListeners.find((listener) =>
-        listener.url() === url
+      const listener = activeListeners.find(
+        (listener) => listener.url() === url,
       );
       listener?.close();
     }

@@ -135,7 +135,8 @@ export class NgrokExtension {
   };
 
   async #getAuthToken() {
-    const authToken = await this.context.secrets.get(authTokenKey) ??
+    const authToken =
+      (await this.context.secrets.get(authTokenKey)) ??
       process.env.NGROK_AUTHTOKEN;
     if (!authToken) {
       const success = await this.setAuthToken();
