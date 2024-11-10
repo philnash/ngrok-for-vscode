@@ -1,15 +1,29 @@
 import { commands, ExtensionContext, window } from "vscode";
-import { setAuthToken, start, stop } from "./ngrok";
+import { NgrokExtension } from "./ngrok";
+
+const extensionName = "ngrok-for-vscode";
+
+let ngrok: NgrokExtension;
 
 export function activate(context: ExtensionContext) {
+  ngrok = new NgrokExtension(context);
   context.subscriptions.push(
-    commands.registerCommand("ngrok-for-vscode.start", start),
+    commands.registerCommand(`${extensionName}.start`, ngrok.start),
   );
   context.subscriptions.push(
-    commands.registerCommand("ngrok-for-vscode.stop", stop),
+    commands.registerCommand(`${extensionName}.stop`, ngrok.stop),
   );
   context.subscriptions.push(
-    commands.registerCommand("ngrok-for-vscode.setAuthToken", setAuthToken),
+    commands.registerCommand(
+      `${extensionName}.setAuthToken`,
+      ngrok.setAuthToken,
+    ),
+  );
+  context.subscriptions.push(
+    commands.registerCommand(
+      `${extensionName}.unsetAuthToken`,
+      ngrok.unsetAuthToken,
+    ),
   );
 }
 

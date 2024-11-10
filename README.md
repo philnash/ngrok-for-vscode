@@ -5,7 +5,6 @@
   <p>
     <a href="https://marketplace.visualstudio.com/items?itemName=philnash.ngrok-for-vscode"><img alt="Visual Studio Marketplace Version" src="https://img.shields.io/visual-studio-marketplace/v/philnash.ngrok-for-vscode?label=ngrok%20for%20VS%20Code&logo=visual-studio-code"></a>
     <a href="https://github.com/philnash/ngrok-for-vscode/actions"><img src="https://img.shields.io/github/actions/workflow/status/philnash/ngrok-for-vscode/ci.yml?logo=github&label=Tests" alt="GitHub Actions CI status" /></a>
-    <a href="https://sonarcloud.io/summary/new_code?id=philnash_ngrok-for-vscode"><img src="https://sonarcloud.io/api/project_badges/measure?project=philnash_ngrok-for-vscode&metric=sqale_rating" alt="SonarCloud Maintainability Rating" /></a>
   </p>
   <hr />
   <p><em>If you enjoy using this extension, please consider sponsoring it on GitHub</em></p>
