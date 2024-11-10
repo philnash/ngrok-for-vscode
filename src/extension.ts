@@ -1,5 +1,6 @@
-import { commands, ExtensionContext, window } from "vscode";
+import { commands, ExtensionContext } from "vscode";
 import { NgrokExtension } from "./ngrok";
+import { createStatusBarItem } from "./ngrok/statusBarItem";
 
 const extensionName = "ngrok-for-vscode";
 
@@ -25,6 +26,7 @@ export function activate(context: ExtensionContext) {
       ngrok.unsetAuthToken,
     ),
   );
+  context.subscriptions.push(createStatusBarItem(`${extensionName}.stop`));
 }
 
 // This method is called when your extension is deactivated

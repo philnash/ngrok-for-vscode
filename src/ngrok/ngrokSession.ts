@@ -3,9 +3,11 @@ import * as pack from "../../package.json";
 
 export class NgrokSession {
   session: ngrok.Session | null;
+  listeners: ngrok.Listener[];
 
   constructor() {
     this.session = null;
+    this.listeners = [];
   }
 
   async forward({ addr, authToken }: { addr: string; authToken: string }) {
@@ -16,6 +18,7 @@ export class NgrokSession {
     listener.forward(`localhost:${addr}`).catch((error) => {
       console.error(error);
     });
+    this.listeners.push(listener);
     return listener;
   }
 
@@ -23,27 +26,24 @@ export class NgrokSession {
     if (!this.session) {
       return;
     }
-    const activeListeners = await this.session.listeners();
     if (url === "All") {
-      await Promise.all(activeListeners.map((listener) => listener.close()));
+      await Promise.all(
+        this.listeners.map((listener) => listener.close()),
+      );
+      this.listeners = [];
     } else {
-      const listener = activeListeners.find(
+      const listener = this.listeners.find(
         (listener) => listener.url() === url,
       );
       listener?.close();
+      this.listeners = this.listeners.filter(
+        (listener) => listener.url() !== url,
+      );
     }
-    const listeners = await this.session.listeners();
-    if (listeners.length === 0) {
+    if (this.listeners.length === 0) {
       await this.session.close();
       this.session = null;
     }
-  }
-
-  listeners() {
-    if (!this.session) {
-      return [];
-    }
-    return this.session.listeners();
   }
 
   async #initiateSession(authToken: string) {

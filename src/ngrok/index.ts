@@ -9,6 +9,7 @@ import {
 import ngrok from "@ngrok/ngrok";
 import { isError } from "./error";
 import { showQR } from "./qr";
+import { hideStatusBarItem, showStatusBarItem } from "./statusBarItem";
 import { NgrokSession } from "./ngrokSession";
 
 const authTokenKey = "ngrok.authToken";
@@ -35,12 +36,11 @@ export class NgrokExtension {
       return;
     }
     try {
-      console.log("Forwarding");
       const listener = await this.session.forward({
         authToken: authToken,
         addr,
       });
-      console.log({ listener });
+      showStatusBarItem();
       const url = listener.url();
       if (url) {
         const actions = [
@@ -82,7 +82,7 @@ export class NgrokExtension {
   };
 
   stop = async () => {
-    const listeners = await this.session.listeners();
+    const listeners = this.session.listeners;
     if (listeners.length === 0) {
       window.showInformationMessage("No ngrok listeners found.");
       return;
@@ -106,6 +106,9 @@ export class NgrokExtension {
         window.showInformationMessage(
           `ngrok listener at ${url.label} stopped.`,
         );
+      }
+      if (this.session.listeners.length === 0) {
+        hideStatusBarItem();
       }
     } catch (error) {
       if (isError(error)) {
@@ -135,8 +138,7 @@ export class NgrokExtension {
   };
 
   async #getAuthToken() {
-    const authToken =
-      (await this.context.secrets.get(authTokenKey)) ??
+    const authToken = (await this.context.secrets.get(authTokenKey)) ??
       process.env.NGROK_AUTHTOKEN;
     if (!authToken) {
       const success = await this.setAuthToken();
