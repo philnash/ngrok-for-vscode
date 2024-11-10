@@ -73,8 +73,8 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint && npm run format:check",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
-    "format": "prettier --write '*.json' src",
-    "format:check": "prettier --check '*.json' src",
+    "format": "prettier --write *.json src",
+    "format:check": "prettier --check *.json src",
     "test": "vscode-test"
   },
   "devDependencies": {
