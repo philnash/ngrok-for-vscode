@@ -4,6 +4,7 @@ import { defineConfig } from "@vscode/test-cli";
 
 const root = import.meta.dirname;
 const target = process.env.VSCODE_PLATFORM_TARGET;
+const liveSmokeEnabled = process.env.NGROK_PLATFORM_LIVE_SMOKE === "true";
 const { name, version } = JSON.parse(
   readFileSync(join(root, "package.json"), "utf8"),
 );
@@ -25,6 +26,6 @@ export default defineConfig({
   extensionDevelopmentPath: join(root, "scripts", "platform-smoke"),
   installExtensions: [artifact],
   mocha: {
-    timeout: 30_000,
+    timeout: liveSmokeEnabled ? 60_000 : 30_000,
   },
 });
