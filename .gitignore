@@ -3,6 +3,7 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+artifacts/
 
 # IDE - VSCode
 .vscode/*
@@ -10,3 +11,5 @@ node_modules
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+plans/

@@ -1,7 +1,9 @@
 const esbuild = require("esbuild");
+const { rmSync } = require("fs");
 
 const production = process.argv.includes("--production");
 const watch = process.argv.includes("--watch");
+const ngrokPackagePath = process.env.NGROK_PACKAGE_PATH;
 
 /**
  * @type {import('esbuild').Plugin}
@@ -17,7 +19,7 @@ const esbuildProblemMatcherPlugin = {
       result.errors.forEach(({ text, location }) => {
         console.error(`✘ [ERROR] ${text}`);
         console.error(
-          `    ${location.file}:${location.line}:${location.column}:`
+          `    ${location.file}:${location.line}:${location.column}:`,
         );
       });
       console.log("[watch] build finished");
@@ -26,6 +28,10 @@ const esbuildProblemMatcherPlugin = {
 };
 
 async function main() {
+  if (!watch) {
+    rmSync("dist", { recursive: true, force: true });
+  }
+
   const ctx = await esbuild.context({
     entryPoints: ["src/extension.ts"],
     bundle: true,
@@ -35,12 +41,16 @@ async function main() {
     sourcesContent: false,
     platform: "node",
     outfile: "dist/extension.js",
-    external: ["vscode", "@ngrok/ngrok"],
+    external: ["vscode"],
+    alias: ngrokPackagePath ? { "@ngrok/ngrok": ngrokPackagePath } : undefined,
     logLevel: "silent",
     plugins: [
       /* add to the end of plugins array */
       esbuildProblemMatcherPlugin,
     ],
+    loader: {
+      ".node": "copy",
+    },
   });
   if (watch) {
     await ctx.watch();

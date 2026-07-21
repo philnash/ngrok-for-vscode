@@ -1,8 +1,13 @@
 .vscode/**
 .vscode-test/**
+.github/**
+.superpowers/**
+plans/**
+scripts/**
 out/**
 node_modules/**
 src/**
+features.md
 .gitignore
 .yarnrc
 esbuild.js
