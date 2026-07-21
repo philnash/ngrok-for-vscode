@@ -2,9 +2,14 @@ const assert = require("node:assert/strict");
 const { createServer } = require("node:http");
 const { join } = require("node:path");
 const vscode = require("vscode");
+const { withDeadline } = require("./live-operations");
 
 const responseBody = "ngrok-for-vscode packaged live smoke";
 const liveSmokeEnabled = process.env.NGROK_PLATFORM_LIVE_SMOKE === "true";
+const startTimeoutMs = 30_000;
+const fetchTimeoutMs = 15_000;
+const stopTimeoutMs = 15_000;
+const cleanupTimeoutMs = 10_000;
 
 const listen = async () => {
   const server = createServer((_request, response) => {
@@ -99,26 +104,33 @@ suite("packaged platform extension live smoke", () => {
       assert.equal(typeof packagedExtension.activate, "function");
       assert.equal(typeof packagedExtension.deactivate, "function");
 
-      const { port, server } = await listen();
-      const messages = [];
-      const subscriptions = [];
-      const context = {
-        secrets: {
-          delete: async () => undefined,
-          get: async () => undefined,
-          store: async () => undefined,
-        },
-        subscriptions,
-      };
-      const outputChannel = {
-        appendLine: () => undefined,
-        dispose: () => undefined,
-      };
-      const commands = createCommandRegistry();
+      let server;
+      let deactivate;
       let listenerUrl;
+      let commands;
+      const subscriptions = [];
       const restore = [];
 
       try {
+        const localServer = await listen();
+        server = localServer.server;
+        const { port } = localServer;
+        const messages = [];
+        const context = {
+          secrets: {
+            delete: async () => undefined,
+            get: async () => undefined,
+            store: async () => undefined,
+          },
+          subscriptions,
+        };
+        const outputChannel = {
+          appendLine: () => undefined,
+          dispose: () => undefined,
+        };
+        commands = createCommandRegistry();
+        let deactivation;
+        deactivate = () => (deactivation ??= packagedExtension.deactivate());
         restore.push(
           replaceProperty(vscode.window, "showInputBox", async () => port),
         );
@@ -147,7 +159,12 @@ suite("packaged platform extension live smoke", () => {
           outputChannel,
           commands.commandRegistry,
         );
-        await commands.execute("ngrok-for-vscode.start");
+        await withDeadline(() => commands.execute("ngrok-for-vscode.start"), {
+          timeoutMs: startTimeoutMs,
+          operationName: "Start command",
+          onTimeout: deactivate,
+          onLateResult: deactivate,
+        });
 
         const startMessage = messages.find((message) =>
           message.startsWith("ngrok is forwarding "),
@@ -157,24 +174,48 @@ suite("packaged platform extension live smoke", () => {
         assert.ok(match, "Start should report a public listener URL");
         listenerUrl = match[1];
 
-        const response = await fetch(listenerUrl, {
-          headers: { "ngrok-skip-browser-warning": "true" },
-        });
+        const fetchController = new AbortController();
+        const response = await withDeadline(
+          () =>
+            fetch(listenerUrl, {
+              headers: { "ngrok-skip-browser-warning": "true" },
+              signal: fetchController.signal,
+            }),
+          {
+            timeoutMs: fetchTimeoutMs,
+            operationName: "Public listener fetch",
+            onTimeout: () => fetchController.abort(),
+            onLateResult: (lateResponse) => lateResponse.body?.cancel(),
+          },
+        );
         assert.equal(response.status, 200);
-        assert.equal(await response.text(), responseBody);
+        const responseText = await withDeadline(() => response.text(), {
+          timeoutMs: fetchTimeoutMs,
+          operationName: "Public listener response body",
+          onTimeout: () => fetchController.abort(),
+        });
+        assert.equal(responseText, responseBody);
 
-        await commands.execute("ngrok-for-vscode.stop");
+        await withDeadline(() => commands.execute("ngrok-for-vscode.stop"), {
+          timeoutMs: stopTimeoutMs,
+          operationName: "Stop command",
+          onTimeout: deactivate,
+          onLateResult: deactivate,
+        });
         assert.ok(
           messages.includes(`ngrok listener at ${listenerUrl} stopped.`),
           "Stop should report the stopped listener URL",
         );
       } finally {
         try {
-          await packagedExtension.deactivate();
+          await withDeadline(() => deactivate?.(), {
+            timeoutMs: cleanupTimeoutMs,
+            operationName: "Packaged extension deactivation",
+          });
         } finally {
           try {
             await runAll([
-              () => commands.dispose(),
+              () => commands?.dispose(),
               ...subscriptions.map(
                 (subscription) => () => subscription.dispose(),
               ),
@@ -183,7 +224,12 @@ suite("packaged platform extension live smoke", () => {
             try {
               await runAll(restore.reverse());
             } finally {
-              await closeServer(server);
+              if (server) {
+                await withDeadline(() => closeServer(server), {
+                  timeoutMs: cleanupTimeoutMs,
+                  operationName: "Local HTTP server shutdown",
+                });
+              }
             }
           }
         }

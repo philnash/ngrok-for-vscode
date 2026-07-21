@@ -26,6 +26,6 @@ export default defineConfig({
   extensionDevelopmentPath: join(root, "scripts", "platform-smoke"),
   installExtensions: [artifact],
   mocha: {
-    timeout: liveSmokeEnabled ? 60_000 : 30_000,
+    timeout: liveSmokeEnabled ? 120_000 : 30_000,
   },
 });
