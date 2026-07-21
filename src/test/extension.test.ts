@@ -20,6 +20,29 @@ const commandTitles = [
 const createOutputChannel = () =>
   ({ dispose: () => undefined }) as vscode.OutputChannel;
 
+const createCommandRegistry = () => {
+  const handlers = new Map<string, (...args: unknown[]) => unknown>();
+  const commandRegistry: Pick<typeof vscode.commands, "registerCommand"> = {
+    registerCommand(command, callback) {
+      handlers.set(command, callback as (...args: unknown[]) => unknown);
+      return {
+        dispose: () => {
+          handlers.delete(command);
+        },
+      };
+    },
+  };
+
+  return {
+    commandRegistry,
+    executeCommand: async (command: string) => {
+      const handler = handlers.get(command);
+      assert.ok(handler, `${command} should be registered`);
+      return await handler();
+    },
+  };
+};
+
 suite("ngrok for VS Code", () => {
   let previousToken: string | undefined;
 
@@ -83,16 +106,17 @@ suite("ngrok for VS Code", () => {
       "philnash.ngrok-for-vscode",
     );
     assert.ok(extension);
+    const { commandRegistry, executeCommand } = createCommandRegistry();
 
     try {
       assert.equal(process.env.NGROK_AUTHTOKEN, undefined);
       assert.equal(extension.isActive, false);
-      activate(context, session, createOutputChannel());
+      activate(context, session, createOutputChannel(), commandRegistry);
 
       assert.deepEqual(disconnectCalls, []);
       assert.equal(forwardCalls, 0);
 
-      await vscode.commands.executeCommand("ngrok-for-vscode.stop");
+      await executeCommand("ngrok-for-vscode.stop");
 
       assert.deepEqual(disconnectCalls, [listenerUrl]);
       assert.equal(forwardCalls, 0);
@@ -138,7 +162,8 @@ suite("ngrok for VS Code", () => {
         throw new Error("Start was not expected during deactivation");
       },
     };
-    activate(context, session, createOutputChannel());
+    const { commandRegistry } = createCommandRegistry();
+    activate(context, session, createOutputChannel(), commandRegistry);
     let deactivated = false;
 
     try {

@@ -12,22 +12,23 @@ export function activate(
   context: ExtensionContext,
   session: SessionService = new NgrokSession(createSession),
   outputChannel: OutputChannel = window.createOutputChannel("ngrok"),
+  commandRegistry: Pick<typeof commands, "registerCommand"> = commands,
 ) {
   ngrok = new NgrokExtension(context, session, outputChannel);
   context.subscriptions.push(
-    commands.registerCommand(`${extensionName}.start`, ngrok.start),
+    commandRegistry.registerCommand(`${extensionName}.start`, ngrok.start),
   );
   context.subscriptions.push(
-    commands.registerCommand(`${extensionName}.stop`, ngrok.stop),
+    commandRegistry.registerCommand(`${extensionName}.stop`, ngrok.stop),
   );
   context.subscriptions.push(
-    commands.registerCommand(
+    commandRegistry.registerCommand(
       `${extensionName}.setAuthToken`,
       ngrok.setAuthToken,
     ),
   );
   context.subscriptions.push(
-    commands.registerCommand(
+    commandRegistry.registerCommand(
       `${extensionName}.unsetAuthToken`,
       ngrok.unsetAuthToken,
     ),

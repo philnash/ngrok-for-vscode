@@ -92,6 +92,49 @@ describe("NgrokSession", () => {
     expect(ngrok.session).toBeNull();
   });
 
+  it("rejects a listener created after final-listener teardown begins", async () => {
+    let finishClosingListener!: () => void;
+    const listenerClose = new Promise<void>((resolve) => {
+      finishClosingListener = resolve;
+    });
+    let finishCreatingLateListener!: (listener: Listener) => void;
+    const lateListenerCreation = new Promise<Listener>((resolve) => {
+      finishCreatingLateListener = resolve;
+    });
+    const listener = createListener("https://only.example");
+    const lateListener = createListener("https://late.example");
+    vi.mocked(listener.close).mockReturnValue(listenerClose);
+    const { listenAndForward, session } = createSession(listener);
+    listenAndForward
+      .mockReset()
+      .mockResolvedValueOnce(listener)
+      .mockReturnValueOnce(lateListenerCreation);
+    const ngrok = new NgrokSession(
+      vi.fn<SessionFactory>().mockResolvedValue(session),
+    );
+    await ngrok.forward({ addr: "3000", authToken: "test-token" });
+
+    const disconnect = ngrok.disconnect("https://only.example");
+    const lateForward = expect(
+      ngrok.forward({ addr: "4000", authToken: "test-token" }),
+    ).rejects.toThrow("ngrok session closed before forwarding started");
+    await vi.waitFor(() => {
+      expect(listenAndForward).toHaveBeenCalledTimes(2);
+    });
+
+    finishClosingListener();
+    await Promise.resolve();
+    expect(session.close).not.toHaveBeenCalled();
+    finishCreatingLateListener(lateListener);
+
+    await lateForward;
+    await disconnect;
+    expect(lateListener.close).toHaveBeenCalledOnce();
+    expect(session.close).toHaveBeenCalledOnce();
+    expect(ngrok.listeners).toEqual([]);
+    expect(ngrok.session).toBeNull();
+  });
+
   it("disconnects all listeners by closing the session once", async () => {
     const listener = createListener("https://only.example");
     const { session } = createSession(listener);
@@ -238,7 +281,7 @@ describe("NgrokSession", () => {
     expect(ngrok.session).toBeNull();
   });
 
-  it("awaits forwarding setup before completing disposal", async () => {
+  it("rejects forwarding setup completed during disposal", async () => {
     let finishCreatingListener!: (listener: Listener) => void;
     const listenerCreation = new Promise<Listener>((resolve) => {
       finishCreatingListener = resolve;
@@ -249,10 +292,9 @@ describe("NgrokSession", () => {
     const ngrok = new NgrokSession(
       vi.fn<SessionFactory>().mockResolvedValue(session),
     );
-    const forwarding = ngrok.forward({
-      addr: "3000",
-      authToken: "test-token",
-    });
+    const forwarding = expect(
+      ngrok.forward({ addr: "3000", authToken: "test-token" }),
+    ).rejects.toThrow("ngrok session closed before forwarding started");
     await Promise.resolve();
     await Promise.resolve();
     expect(listenAndForward).toHaveBeenCalledOnce();
@@ -266,6 +308,7 @@ describe("NgrokSession", () => {
     expect(disposed).toBe(false);
     finishCreatingListener(listener);
     await Promise.all([forwarding, disposal]);
+    expect(listener.close).toHaveBeenCalledOnce();
     expect(session.close).toHaveBeenCalledOnce();
     expect(ngrok.listeners).toEqual([]);
     expect(ngrok.session).toBeNull();
