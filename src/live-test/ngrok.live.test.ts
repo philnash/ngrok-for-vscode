@@ -5,10 +5,9 @@ import * as vscode from "vscode";
 import { activate, deactivate } from "../extension";
 import { NgrokSession, type Listener } from "../ngrok/ngrokSession";
 import { createSession } from "../ngrok/sessionFactory";
+import { retryForSession } from "./retryForSession";
 
 const responseBody = "ngrok-for-vscode live test";
-const retryTimeoutMs = 5_000;
-const retryIntervalMs = 250;
 
 const listen = async () => {
   const server = createServer((_request, response) => {
@@ -39,28 +38,6 @@ const assertReachable = async (listener: Listener) => {
   });
   assert.equal(response.status, 200);
   assert.equal(await response.text(), responseBody);
-};
-
-const retryForSession = async <T>(operation: () => Promise<T>) => {
-  const deadline = Date.now() + retryTimeoutMs;
-  let lastError: unknown;
-  do {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error;
-      const remaining = deadline - Date.now();
-      if (remaining <= 0) {
-        break;
-      }
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.min(retryIntervalMs, remaining)),
-      );
-    }
-  } while (Date.now() < deadline);
-  throw new Error("ngrok did not accept a session within five seconds", {
-    cause: lastError,
-  });
 };
 
 const createContext = () => {
@@ -101,8 +78,9 @@ suite("ngrok live lifecycle", () => {
       assert.equal(session.listeners.length, 0);
       assert.equal(session.session, null);
 
-      const secondListener = await retryForSession(() =>
-        session.forward({ addr: port, authToken }),
+      const secondListener = await retryForSession(
+        () => session.forward({ addr: port, authToken }),
+        { cleanupLateResult: () => session.disconnectAll() },
       );
       await assertReachable(secondListener);
     } finally {
@@ -124,8 +102,9 @@ suite("ngrok live lifecycle", () => {
 
     activate(context, session, createOutputChannel());
     try {
-      const listener = await retryForSession(() =>
-        session.forward({ addr: port, authToken }),
+      const listener = await retryForSession(
+        () => session.forward({ addr: port, authToken }),
+        { cleanupLateResult: () => session.disconnectAll() },
       );
       await assertReachable(listener);
 
@@ -133,8 +112,9 @@ suite("ngrok live lifecycle", () => {
       assert.equal(session.listeners.length, 0);
       assert.equal(session.session, null);
 
-      const replacementListener = await retryForSession(() =>
-        replacementSession.forward({ addr: port, authToken }),
+      const replacementListener = await retryForSession(
+        () => replacementSession.forward({ addr: port, authToken }),
+        { cleanupLateResult: () => replacementSession.disconnectAll() },
       );
       await assertReachable(replacementListener);
     } finally {

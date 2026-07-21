@@ -18,3 +18,5 @@ vsc-extension-quickstart.md
 **/*.ts
 **/.vscode-test.*
 .vscode-test*.mjs
+tsconfig.unit.json
+vitest.config.mjs
