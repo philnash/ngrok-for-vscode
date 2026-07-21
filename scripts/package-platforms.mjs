@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { resolveNpmInvocation } from "./npm-invocation.mjs";
 
 const targets = {
   "win32-x64": {
@@ -59,7 +60,7 @@ const targets = {
 
 const root = resolve(import.meta.dirname, "..");
 const artifactsDirectory = join(root, "artifacts");
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmInvocation = resolveNpmInvocation();
 const vscePath = join(root, "node_modules", "@vscode", "vsce", "vsce");
 
 const packageJson = JSON.parse(
@@ -120,7 +121,10 @@ for (const target of selectedTargets) {
       installArguments.push(`--libc=${config.libc}`);
     }
     installArguments.push(`@ngrok/ngrok@${ngrokVersion}`);
-    run(npmCommand, installArguments);
+    run(npmInvocation.command, [
+      ...npmInvocation.argsPrefix,
+      ...installArguments,
+    ]);
 
     const ngrokPackagePath = join(
       stagingDirectory,

@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["src/**/*.unit.test.ts"],
+    include: ["src/**/*.unit.test.ts", "scripts/**/*.unit.test.mjs"],
     mockReset: true,
     unstubEnvs: true,
   },

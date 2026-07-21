@@ -1,12 +1,13 @@
 import { spawnSync } from "node:child_process";
 import process from "node:process";
+import { resolveNpmInvocation } from "./npm-invocation.mjs";
 
 if (!process.env.NGROK_AUTHTOKEN) {
   console.log("Live tests skipped: NGROK_AUTHTOKEN is not set.");
   process.exit(0);
 }
 
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmInvocation = resolveNpmInvocation();
 for (const args of [
   ["run", "compile-tests"],
   ["run", "bundle"],
@@ -19,7 +20,11 @@ for (const args of [
     ...process.argv.slice(2),
   ],
 ]) {
-  const result = spawnSync(npmCommand, args, { stdio: "inherit" });
+  const result = spawnSync(
+    npmInvocation.command,
+    [...npmInvocation.argsPrefix, ...args],
+    { stdio: "inherit" },
+  );
   if (result.error) {
     throw result.error;
   }
