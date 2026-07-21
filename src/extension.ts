@@ -1,13 +1,18 @@
 import { commands, ExtensionContext } from "vscode";
 import { NgrokExtension } from "./ngrok";
+import { NgrokSession, type SessionService } from "./ngrok/ngrokSession";
+import { createSession } from "./ngrok/sessionFactory";
 import { createStatusBarItem } from "./ngrok/statusBarItem";
 
 const extensionName = "ngrok-for-vscode";
 
 let ngrok: NgrokExtension;
 
-export function activate(context: ExtensionContext) {
-  ngrok = new NgrokExtension(context);
+export function activate(
+  context: ExtensionContext,
+  session: SessionService = new NgrokSession(createSession),
+) {
+  ngrok = new NgrokExtension(context, session);
   context.subscriptions.push(
     commands.registerCommand(`${extensionName}.start`, ngrok.start),
   );

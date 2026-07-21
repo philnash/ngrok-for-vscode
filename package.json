@@ -63,7 +63,8 @@
   "scripts": {
     "publish": "vsce publish --githubBranch main",
     "vscode:prepublish": "npm run package",
-    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "compile": "npm run check-types && npm run lint && npm run bundle",
+    "bundle": "node esbuild.js",
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
@@ -71,12 +72,14 @@
     "package:platforms": "node scripts/package-platforms.mjs",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint && npm run format:check",
-    "check-types": "tsc --noEmit",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.unit.json",
     "lint": "eslint src",
-    "format": "prettier --write '*.json' src",
-    "format:check": "prettier --check '*.json' src",
-    "test": "vscode-test"
+    "format": "prettier --write '*.json' 'vitest.config.mjs' src",
+    "format:check": "prettier --check '*.json' 'vitest.config.mjs' src",
+    "test": "npm-run-all format:check check-types lint test:unit test:extension",
+    "test:unit": "vitest run",
+    "test:extension": "npm-run-all compile-tests bundle test:extension:run",
+    "test:extension:run": "vscode-test"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.9",
@@ -92,7 +95,8 @@
     "eslint": "^9.39.5",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.3.3",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.10"
   },
   "license": "MIT",
   "overrides": {

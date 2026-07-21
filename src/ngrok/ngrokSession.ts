@@ -1,11 +1,29 @@
-import ngrok from "@ngrok/ngrok";
-import * as pack from "../../package.json";
+export interface Listener {
+  close(): Promise<void>;
+  forward(addr: string): Promise<void>;
+  url(): string | null;
+}
 
-export class NgrokSession {
-  session: ngrok.Session | null;
-  listeners: ngrok.Listener[];
+export interface Session {
+  close(): Promise<void>;
+  httpEndpoint(): {
+    listen(): Promise<Listener>;
+  };
+}
 
-  constructor() {
+export type SessionFactory = (authToken: string) => Promise<Session>;
+
+export interface SessionService {
+  listeners: Listener[];
+  disconnect(url: string): Promise<void>;
+  forward(options: { addr: string; authToken: string }): Promise<Listener>;
+}
+
+export class NgrokSession implements SessionService {
+  session: Session | null;
+  listeners: Listener[];
+
+  constructor(private readonly createSession: SessionFactory) {
     this.session = null;
     this.listeners = [];
   }
@@ -27,9 +45,7 @@ export class NgrokSession {
       return;
     }
     if (url === "All") {
-      await Promise.all(
-        this.listeners.map((listener) => listener.close()),
-      );
+      await Promise.all(this.listeners.map((listener) => listener.close()));
       this.listeners = [];
     } else {
       const listener = this.listeners.find(
@@ -47,9 +63,6 @@ export class NgrokSession {
   }
 
   async #initiateSession(authToken: string) {
-    return new ngrok.SessionBuilder()
-      .authtoken(authToken)
-      .clientInfo("ngrok-for-vscode", pack.version)
-      .connect();
+    return this.createSession(authToken);
   }
 }

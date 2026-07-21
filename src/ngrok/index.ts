@@ -6,22 +6,24 @@ import {
   WebviewPanel,
   window,
 } from "vscode";
-import ngrok from "@ngrok/ngrok";
 import { isError } from "./error";
 import { showQR } from "./qr";
 import { hideStatusBarItem, showStatusBarItem } from "./statusBarItem";
-import { NgrokSession } from "./ngrokSession";
+import type { SessionService } from "./ngrokSession";
 
 const authTokenKey = "ngrok.authToken";
 
 export class NgrokExtension {
   webviewPanel: WebviewPanel | null;
-  session: NgrokSession;
+  session: SessionService;
 
-  constructor(private readonly context: ExtensionContext) {
+  constructor(
+    private readonly context: ExtensionContext,
+    session: SessionService,
+  ) {
     this.context = context;
     this.webviewPanel = null;
-    this.session = new NgrokSession();
+    this.session = session;
   }
 
   start = async () => {
@@ -138,7 +140,8 @@ export class NgrokExtension {
   };
 
   async #getAuthToken() {
-    const authToken = (await this.context.secrets.get(authTokenKey)) ??
+    const authToken =
+      (await this.context.secrets.get(authTokenKey)) ??
       process.env.NGROK_AUTHTOKEN;
     if (!authToken) {
       const success = await this.setAuthToken();
