@@ -13,6 +13,13 @@ export interface Session {
 
 export type SessionFactory = (authToken: string) => Promise<Session>;
 
+export class NgrokSessionDisposedError extends Error {
+  constructor() {
+    super("ngrok session has been disposed");
+    this.name = "NgrokSessionDisposedError";
+  }
+}
+
 export interface SessionService {
   listeners: Listener[];
   disconnect(url: string): Promise<void>;
@@ -25,6 +32,7 @@ export class NgrokSession implements SessionService {
   session: Session | null;
   listeners: Listener[];
   #disconnecting: Promise<void> | null;
+  #disposed: boolean;
   #forwarding: Set<Promise<Listener>>;
   #sessionCreation: Promise<Session> | null;
 
@@ -32,11 +40,15 @@ export class NgrokSession implements SessionService {
     this.session = null;
     this.listeners = [];
     this.#disconnecting = null;
+    this.#disposed = false;
     this.#forwarding = new Set();
     this.#sessionCreation = null;
   }
 
   forward(options: { addr: string; authToken: string }) {
+    if (this.#disposed) {
+      return Promise.reject(new NgrokSessionDisposedError());
+    }
     const forwarding = this.#forward(options);
     this.#forwarding.add(forwarding);
     void forwarding.then(
@@ -108,6 +120,7 @@ export class NgrokSession implements SessionService {
   }
 
   async dispose() {
+    this.#disposed = true;
     await this.disconnectAll();
   }
 

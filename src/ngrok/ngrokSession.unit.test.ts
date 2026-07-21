@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   NgrokSession,
+  NgrokSessionDisposedError,
   type Listener,
   type Session,
   type SessionFactory,
@@ -118,6 +119,28 @@ describe("NgrokSession", () => {
     expect(listener.close).not.toHaveBeenCalled();
     expect(ngrok.listeners).toEqual([]);
     expect(ngrok.session).toBeNull();
+  });
+
+  it("can create a new session after disconnectAll", async () => {
+    const firstListener = createListener("https://first.example");
+    const secondListener = createListener("https://second.example");
+    const first = createSession(firstListener);
+    const second = createSession(secondListener);
+    const factory = vi
+      .fn<SessionFactory>()
+      .mockResolvedValueOnce(first.session)
+      .mockResolvedValueOnce(second.session);
+    const ngrok = new NgrokSession(factory);
+    await ngrok.forward({ addr: "3000", authToken: "test-token" });
+
+    await ngrok.disconnectAll();
+    await ngrok.forward({ addr: "4000", authToken: "test-token" });
+
+    expect(factory).toHaveBeenCalledTimes(2);
+    expect(first.session.close).toHaveBeenCalledOnce();
+    expect(second.session.close).not.toHaveBeenCalled();
+    expect(ngrok.listeners).toEqual([secondListener]);
+    expect(ngrok.session).toBe(second.session);
   });
 
   it("clears listener and session state when closing the session fails", async () => {
@@ -244,6 +267,26 @@ describe("NgrokSession", () => {
     finishCreatingListener(listener);
     await Promise.all([forwarding, disposal]);
     expect(session.close).toHaveBeenCalledOnce();
+    expect(ngrok.listeners).toEqual([]);
+    expect(ngrok.session).toBeNull();
+  });
+
+  it("rejects forwarding after disposal without creating a session", async () => {
+    const listener = createListener("https://late.example");
+    const { session } = createSession(listener);
+    const factory = vi.fn<SessionFactory>().mockResolvedValue(session);
+    const ngrok = new NgrokSession(factory);
+    await ngrok.dispose();
+
+    const forwarding = ngrok.forward({
+      addr: "3000",
+      authToken: "test-token",
+    });
+    await expect(forwarding).rejects.toBeInstanceOf(NgrokSessionDisposedError);
+    await expect(forwarding).rejects.toThrow("ngrok session has been disposed");
+
+    expect(factory).not.toHaveBeenCalled();
+    expect(session.close).not.toHaveBeenCalled();
     expect(ngrok.listeners).toEqual([]);
     expect(ngrok.session).toBeNull();
   });
