@@ -10,6 +10,16 @@ const commandIds = [
   "ngrok-for-vscode.unsetAuthToken",
 ];
 
+const commandTitles = [
+  ["ngrok-for-vscode.start", "Start"],
+  ["ngrok-for-vscode.stop", "Stop"],
+  ["ngrok-for-vscode.setAuthToken", "Set Auth Token"],
+  ["ngrok-for-vscode.unsetAuthToken", "Unset Auth Token"],
+];
+
+const createOutputChannel = () =>
+  ({ dispose: () => undefined }) as vscode.OutputChannel;
+
 suite("ngrok for VS Code", () => {
   let previousToken: string | undefined;
 
@@ -77,7 +87,7 @@ suite("ngrok for VS Code", () => {
     try {
       assert.equal(process.env.NGROK_AUTHTOKEN, undefined);
       assert.equal(extension.isActive, false);
-      activate(context, session);
+      activate(context, session, createOutputChannel());
 
       assert.deepEqual(disconnectCalls, []);
       assert.equal(forwardCalls, 0);
@@ -128,7 +138,7 @@ suite("ngrok for VS Code", () => {
         throw new Error("Start was not expected during deactivation");
       },
     };
-    activate(context, session);
+    activate(context, session, createOutputChannel());
     let deactivated = false;
 
     try {
@@ -166,5 +176,21 @@ suite("ngrok for VS Code", () => {
         `${commandId} should be registered`,
       );
     });
+  });
+
+  test("contributes clear titles for all four commands", () => {
+    const extension = vscode.extensions.getExtension(
+      "philnash.ngrok-for-vscode",
+    );
+    assert.ok(extension);
+
+    const contributedCommands = extension.packageJSON.contributes.commands.map(
+      (command: { command: string; title: string }) => [
+        command.command,
+        command.title,
+      ],
+    );
+
+    assert.deepEqual(contributedCommands, commandTitles);
   });
 });

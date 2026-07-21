@@ -1,4 +1,4 @@
-import { commands, ExtensionContext } from "vscode";
+import { commands, ExtensionContext, OutputChannel, window } from "vscode";
 import { NgrokExtension } from "./ngrok";
 import { NgrokSession, type SessionService } from "./ngrok/ngrokSession";
 import { createSession } from "./ngrok/sessionFactory";
@@ -11,8 +11,9 @@ let ngrok: NgrokExtension;
 export function activate(
   context: ExtensionContext,
   session: SessionService = new NgrokSession(createSession),
+  outputChannel: OutputChannel = window.createOutputChannel("ngrok"),
 ) {
-  ngrok = new NgrokExtension(context, session);
+  ngrok = new NgrokExtension(context, session, outputChannel);
   context.subscriptions.push(
     commands.registerCommand(`${extensionName}.start`, ngrok.start),
   );

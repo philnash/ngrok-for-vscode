@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Listener, SessionService } from "./ngrokSession";
 
 const vscode = vi.hoisted(() => ({
+  appendLine: vi.fn(),
+  createOutputChannel: vi.fn(),
   createWebviewPanel: vi.fn(),
   openExternal: vi.fn(),
   parseUri: vi.fn((value: string) => value),
@@ -18,6 +20,10 @@ const statusBar = vi.hoisted(() => ({
   show: vi.fn(),
 }));
 
+const qr = vi.hoisted(() => ({
+  show: vi.fn(),
+}));
+
 vi.mock("vscode", () => ({
   env: {
     clipboard: { writeText: vscode.writeText },
@@ -26,6 +32,7 @@ vi.mock("vscode", () => ({
   Uri: { parse: vscode.parseUri },
   ViewColumn: { One: 1 },
   window: {
+    createOutputChannel: vscode.createOutputChannel,
     createWebviewPanel: vscode.createWebviewPanel,
     showErrorMessage: vscode.showErrorMessage,
     showInformationMessage: vscode.showInformationMessage,
@@ -37,6 +44,10 @@ vi.mock("vscode", () => ({
 vi.mock("./statusBarItem", () => ({
   hideStatusBarItem: statusBar.hide,
   showStatusBarItem: statusBar.show,
+}));
+
+vi.mock("./qr", () => ({
+  showQR: qr.show,
 }));
 
 import { NgrokExtension } from ".";
@@ -54,6 +65,7 @@ const createContext = (storedToken?: string) =>
       get: vi.fn().mockResolvedValue(storedToken),
       store: vi.fn(),
     },
+    subscriptions: [],
   }) as unknown as ExtensionContext;
 
 const createSessionService = (initialListeners: Listener[] = []) => {
@@ -90,6 +102,9 @@ const createSessionService = (initialListeners: Listener[] = []) => {
 describe("NgrokExtension", () => {
   beforeEach(() => {
     vi.unstubAllEnvs();
+    vscode.createOutputChannel.mockReturnValue({
+      appendLine: vscode.appendLine,
+    });
   });
 
   it("uses a stored token before the environment token", async () => {
@@ -118,6 +133,48 @@ describe("NgrokExtension", () => {
       addr: "4000",
       authToken: "environment-token",
     });
+  });
+
+  it("uses a token entered by a first-time user in the current Start", async () => {
+    const context = createContext();
+    const session = createSessionService();
+    vscode.showInputBox
+      .mockResolvedValueOnce("prompted-token")
+      .mockResolvedValueOnce("3000");
+
+    await new NgrokExtension(context, session).start();
+
+    expect(context.secrets.store).toHaveBeenCalledWith(
+      "ngrok.authToken",
+      "prompted-token",
+    );
+    expect(session.forward).toHaveBeenCalledWith({
+      addr: "3000",
+      authToken: "prompted-token",
+    });
+  });
+
+  it.each([
+    ["0", false],
+    ["1", true],
+    ["65535", true],
+    ["65536", false],
+    ["1.5", false],
+    ["not-a-number", false],
+  ])("accepts port %s: %s", async (addr, accepted) => {
+    const session = createSessionService();
+    vscode.showInputBox.mockResolvedValueOnce(addr);
+
+    await new NgrokExtension(createContext("stored-token"), session).start();
+
+    if (accepted) {
+      expect(session.forward).toHaveBeenCalledWith({
+        addr,
+        authToken: "stored-token",
+      });
+    } else {
+      expect(session.forward).not.toHaveBeenCalled();
+    }
   });
 
   it("leaves session state unchanged when Start is cancelled", async () => {
@@ -210,6 +267,161 @@ describe("NgrokExtension", () => {
     expect(session.listeners).toHaveLength(0);
     expect(vscode.showErrorMessage).toHaveBeenCalledWith("close failed");
     expect(statusBar.hide).toHaveBeenCalledOnce();
+  });
+
+  it("reports a non-Error Start failure to the user and ngrok output", async () => {
+    const session = createSessionService();
+    vi.mocked(session.forward).mockRejectedValueOnce({
+      code: "START_FAILED",
+      detail: "agent unavailable",
+    });
+    vscode.showInputBox.mockResolvedValueOnce("3000");
+
+    await new NgrokExtension(createContext("stored-token"), session).start();
+
+    expect(vscode.showErrorMessage).toHaveBeenCalledWith(
+      "Unable to start ngrok. See the ngrok output for details.",
+    );
+    expect(vscode.appendLine).toHaveBeenCalledWith(
+      'Start failed: {"code":"START_FAILED","detail":"agent unavailable"}',
+    );
+  });
+
+  it("reports a non-Error Stop failure to the user and ngrok output", async () => {
+    const session = createSessionService([
+      createListener("https://listener.example"),
+    ]);
+    vi.mocked(session.disconnect).mockRejectedValueOnce("agent unavailable");
+    vscode.showQuickPick.mockResolvedValueOnce({
+      label: "https://listener.example",
+    });
+
+    await new NgrokExtension(createContext(), session).stop();
+
+    expect(vscode.showErrorMessage).toHaveBeenCalledWith(
+      "Unable to stop ngrok. See the ngrok output for details.",
+    );
+    expect(vscode.appendLine).toHaveBeenCalledWith(
+      'Stop failed: "agent unavailable"',
+    );
+  });
+
+  it("refreshes and reveals the existing QR panel for another listener", async () => {
+    const firstUrl = "https://first.example";
+    const secondUrl = "https://second.example";
+    const session = createSessionService();
+    vi.mocked(session.forward)
+      .mockResolvedValueOnce(createListener(firstUrl))
+      .mockResolvedValueOnce(createListener(secondUrl));
+    vscode.showInputBox
+      .mockResolvedValueOnce("3000")
+      .mockResolvedValueOnce("3001");
+    vscode.showInformationMessage
+      .mockResolvedValueOnce("Show QR code")
+      .mockResolvedValueOnce("Show QR code");
+    const webviewPanel = {
+      onDidDispose: vi.fn(),
+      reveal: vi.fn(),
+      webview: { html: "" },
+    };
+    vscode.createWebviewPanel.mockReturnValueOnce(webviewPanel);
+    const extension = new NgrokExtension(
+      createContext("stored-token"),
+      session,
+    );
+
+    await extension.start();
+    await extension.start();
+
+    expect(vscode.createWebviewPanel).toHaveBeenCalledOnce();
+    expect(qr.show).toHaveBeenNthCalledWith(1, firstUrl, webviewPanel);
+    expect(qr.show).toHaveBeenNthCalledWith(2, secondUrl, webviewPanel);
+  });
+
+  it("shows the listener URL and actions after Start succeeds", async () => {
+    const url = "https://listener.example";
+    const session = createSessionService();
+    vi.mocked(session.forward).mockResolvedValueOnce(createListener(url));
+    vscode.showInputBox.mockResolvedValueOnce("3000");
+
+    await new NgrokExtension(createContext("stored-token"), session).start();
+
+    expect(vscode.showInformationMessage).toHaveBeenCalledWith(
+      `ngrok is forwarding ${url}.`,
+      "Copy to clipboard",
+      "Open in browser",
+      "Show QR code",
+    );
+  });
+
+  it("shows the stopped listener URL after Stop succeeds", async () => {
+    const url = "https://listener.example";
+    const session = createSessionService([createListener(url)]);
+    vscode.showQuickPick.mockResolvedValueOnce({ label: url });
+
+    await new NgrokExtension(createContext(), session).stop();
+
+    expect(vscode.showInformationMessage).toHaveBeenCalledWith(
+      `ngrok listener at ${url} stopped.`,
+    );
+  });
+
+  it("confirms when the Set Auth Token command succeeds", async () => {
+    const context = createContext();
+    vscode.showInputBox.mockResolvedValueOnce("prompted-token");
+
+    await new NgrokExtension(context, createSessionService()).setAuthToken();
+
+    expect(vscode.showInformationMessage).toHaveBeenCalledWith(
+      "Your ngrok auth token has been saved.",
+    );
+  });
+
+  it("reports when the Set Auth Token command cannot save the token", async () => {
+    const context = createContext();
+    vi.mocked(context.secrets.store).mockRejectedValueOnce(
+      "storage unavailable",
+    );
+    vscode.showInputBox.mockResolvedValueOnce("prompted-token");
+
+    await expect(
+      new NgrokExtension(context, createSessionService()).setAuthToken(),
+    ).resolves.toBe(false);
+
+    expect(vscode.showErrorMessage).toHaveBeenCalledWith(
+      "Unable to save your ngrok auth token. See the ngrok output for details.",
+    );
+    expect(vscode.appendLine).toHaveBeenCalledWith(
+      'Set Auth Token failed: "storage unavailable"',
+    );
+  });
+
+  it("confirms when the Unset Auth Token command succeeds", async () => {
+    const context = createContext("stored-token");
+
+    await new NgrokExtension(context, createSessionService()).unsetAuthToken();
+
+    expect(vscode.showInformationMessage).toHaveBeenCalledWith(
+      "Your ngrok auth token has been deleted.",
+    );
+  });
+
+  it("reports when the Unset Auth Token command cannot delete the token", async () => {
+    const context = createContext("stored-token");
+    vi.mocked(context.secrets.delete).mockRejectedValueOnce(
+      "storage unavailable",
+    );
+
+    await expect(
+      new NgrokExtension(context, createSessionService()).unsetAuthToken(),
+    ).resolves.toBe(false);
+
+    expect(vscode.showErrorMessage).toHaveBeenCalledWith(
+      "Unable to delete your ngrok auth token. See the ngrok output for details.",
+    );
+    expect(vscode.appendLine).toHaveBeenCalledWith(
+      'Unset Auth Token failed: "storage unavailable"',
+    );
   });
 
   it("disposes the session service and hides the status bar", async () => {

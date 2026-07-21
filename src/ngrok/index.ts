@@ -1,6 +1,7 @@
 import {
   env,
   ExtensionContext,
+  OutputChannel,
   Uri,
   ViewColumn,
   WebviewPanel,
@@ -12,6 +13,25 @@ import { hideStatusBarItem, showStatusBarItem } from "./statusBarItem";
 import type { SessionService } from "./ngrokSession";
 
 const authTokenKey = "ngrok.authToken";
+const invalidPortMessage = "Port must be an integer from 1 through 65535.";
+
+const validatePort = (value: string) => {
+  const port = Number(value);
+  return Number.isInteger(port) && port >= 1 && port <= 65535
+    ? undefined
+    : invalidPortMessage;
+};
+
+const formatDiagnostic = (error: unknown) => {
+  if (isError(error)) {
+    return error.stack ?? error.message;
+  }
+  try {
+    return JSON.stringify(error) ?? String(error);
+  } catch {
+    return String(error);
+  }
+};
 
 export class NgrokExtension {
   webviewPanel: WebviewPanel | null;
@@ -20,10 +40,14 @@ export class NgrokExtension {
   constructor(
     private readonly context: ExtensionContext,
     session: SessionService,
+    private readonly outputChannel: OutputChannel = window.createOutputChannel(
+      "ngrok",
+    ),
   ) {
     this.context = context;
     this.webviewPanel = null;
     this.session = session;
+    this.context.subscriptions.push(this.outputChannel);
   }
 
   start = async () => {
@@ -33,8 +57,9 @@ export class NgrokExtension {
     }
     const addr = await window.showInputBox({
       title: "Enter a port number.",
+      validateInput: validatePort,
     });
-    if (!addr) {
+    if (!addr || validatePort(addr)) {
       return;
     }
     try {
@@ -72,14 +97,12 @@ export class NgrokExtension {
               this.webviewPanel.onDidDispose(() => {
                 this.webviewPanel = null;
               });
-              await showQR(url, this.webviewPanel);
             }
+            await showQR(url, this.webviewPanel);
         }
       }
     } catch (error) {
-      if (isError(error)) {
-        window.showErrorMessage(error.message);
-      }
+      this.#reportError("Start", error);
     }
   };
 
@@ -110,9 +133,7 @@ export class NgrokExtension {
         );
       }
     } catch (error) {
-      if (isError(error)) {
-        window.showErrorMessage(error.message);
-      }
+      this.#reportError("Stop", error);
     } finally {
       if (this.session.listeners.length === 0) {
         hideStatusBarItem();
@@ -129,6 +150,30 @@ export class NgrokExtension {
   };
 
   setAuthToken = async () => {
+    const authToken = await this.#promptAndStoreAuthToken();
+    if (authToken) {
+      window.showInformationMessage("Your ngrok auth token has been saved.");
+      return true;
+    }
+    return authToken;
+  };
+
+  unsetAuthToken = async () => {
+    try {
+      await this.context.secrets.delete(authTokenKey);
+      window.showInformationMessage("Your ngrok auth token has been deleted.");
+      return true;
+    } catch (error) {
+      this.#reportError(
+        "Unset Auth Token",
+        error,
+        "Unable to delete your ngrok auth token. See the ngrok output for details.",
+      );
+      return false;
+    }
+  };
+
+  async #promptAndStoreAuthToken() {
     const authToken = await window.showInputBox({
       title: "Set ngrok AuthToken",
       prompt: "Get your auth token from the ngrok dashboard",
@@ -136,31 +181,51 @@ export class NgrokExtension {
     });
 
     if (!authToken) {
-      return false;
+      return;
     }
 
-    await this.context.secrets.store(authTokenKey, authToken);
-    return true;
-  };
-
-  unsetAuthToken = async () => {
-    await this.context.secrets.delete(authTokenKey);
-    window.showInformationMessage("Your ngrok authtoken has been deleted.");
-  };
+    try {
+      await this.context.secrets.store(authTokenKey, authToken);
+      return authToken;
+    } catch (error) {
+      this.#reportError(
+        "Set Auth Token",
+        error,
+        "Unable to save your ngrok auth token. See the ngrok output for details.",
+      );
+      return false;
+    }
+  }
 
   async #getAuthToken() {
     const authToken =
       (await this.context.secrets.get(authTokenKey)) ??
       process.env.NGROK_AUTHTOKEN;
     if (!authToken) {
-      const success = await this.setAuthToken();
-      if (!success) {
+      const promptedAuthToken = await this.#promptAndStoreAuthToken();
+      if (promptedAuthToken === false) {
+        return;
+      }
+      if (!promptedAuthToken) {
         window.showErrorMessage(
           "You need a valid auth token to run ngrok. Please sign up for a free account.",
         );
         return;
       }
+      return promptedAuthToken;
     }
     return authToken;
+  }
+
+  #reportError(operation: string, error: unknown, userMessage?: string) {
+    this.outputChannel.appendLine(
+      `${operation} failed: ${formatDiagnostic(error)}`,
+    );
+    window.showErrorMessage(
+      userMessage ??
+        (isError(error)
+          ? error.message
+          : `Unable to ${operation.toLowerCase()} ngrok. See the ngrok output for details.`),
+    );
   }
 }

@@ -37,22 +37,22 @@
     "commands": [
       {
         "command": "ngrok-for-vscode.start",
-        "title": "start",
+        "title": "Start",
         "category": "ngrok"
       },
       {
         "command": "ngrok-for-vscode.stop",
-        "title": "stop",
+        "title": "Stop",
         "category": "ngrok"
       },
       {
         "command": "ngrok-for-vscode.setAuthToken",
-        "title": "set auth token",
+        "title": "Set Auth Token",
         "category": "ngrok"
       },
       {
         "command": "ngrok-for-vscode.unsetAuthToken",
-        "title": "unset auth token",
+        "title": "Unset Auth Token",
         "category": "ngrok"
       }
     ]
