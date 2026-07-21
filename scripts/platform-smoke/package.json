@@ -1,0 +1,9 @@
+{
+  "name": "ngrok-platform-smoke",
+  "displayName": "ngrok platform smoke harness",
+  "version": "0.0.0",
+  "publisher": "ngrok-platform-smoke",
+  "engines": {
+    "vscode": "^1.95.0"
+  }
+}

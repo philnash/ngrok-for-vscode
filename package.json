@@ -74,12 +74,14 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.unit.json",
     "lint": "eslint src",
-    "format": "prettier --write '*.json' 'vitest.config.mjs' src",
-    "format:check": "prettier --check '*.json' 'vitest.config.mjs' src",
+    "format": "prettier --write '*.json' '.vscode-test*.mjs' 'vitest.config.mjs' '.github/workflows/*.yml' 'scripts/**/*.{js,mjs,json}' src",
+    "format:check": "prettier --check '*.json' '.vscode-test*.mjs' 'vitest.config.mjs' '.github/workflows/*.yml' 'scripts/**/*.{js,mjs,json}' src",
     "test": "npm-run-all format:check check-types lint test:unit test:extension",
     "test:unit": "vitest run",
     "test:extension": "npm-run-all compile-tests bundle test:extension:run",
-    "test:extension:run": "vscode-test"
+    "test:extension:run": "vscode-test",
+    "test:live": "node scripts/test-live.mjs",
+    "test:platform": "vscode-test --config .vscode-test-platform.mjs"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.9",

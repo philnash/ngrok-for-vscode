@@ -1,0 +1,113 @@
+name: Platform packages
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_live:
+        description: Run credentialed listener smoke tests on Windows and Linux x64
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: win32-x64
+            runner: windows-latest
+            activation_smoke: true
+            live_smoke: true
+          - target: win32-arm64
+            runner: windows-11-arm
+            activation_smoke: true
+            live_smoke: false
+          - target: linux-x64
+            runner: ubuntu-latest
+            activation_smoke: true
+            live_smoke: true
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+            activation_smoke: true
+            live_smoke: false
+          - target: linux-armhf
+            runner: ubuntu-latest
+            activation_smoke: false
+            live_smoke: false
+          - target: alpine-x64
+            runner: ubuntu-latest
+            activation_smoke: false
+            live_smoke: false
+          - target: alpine-arm64
+            runner: ubuntu-24.04-arm
+            activation_smoke: false
+            live_smoke: false
+          - target: darwin-x64
+            runner: macos-15-intel
+            activation_smoke: true
+            live_smoke: false
+          - target: darwin-arm64
+            runner: macos-14
+            activation_smoke: true
+            live_smoke: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build target package
+        run: npm run package:platforms -- ${{ matrix.target }}
+
+      - name: Activate packaged extension
+        if: matrix.activation_smoke && runner.os != 'Linux'
+        run: npm run test:platform
+        env:
+          VSCODE_PLATFORM_TARGET: ${{ matrix.target }}
+
+      - name: Activate packaged extension on Linux
+        if: matrix.activation_smoke && runner.os == 'Linux'
+        run: xvfb-run -a npm run test:platform
+        env:
+          VSCODE_PLATFORM_TARGET: ${{ matrix.target }}
+
+      - name: Require live-test credentials
+        if: github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke
+        run: node -e "if (!process.env.NGROK_AUTHTOKEN) throw new Error('NGROK_AUTHTOKEN is not configured')"
+        env:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+
+      - name: Run live listener smoke on Windows
+        if: github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke && runner.os == 'Windows'
+        run: npm run test:live
+        env:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+
+      - name: Run live listener smoke on Linux
+        if: github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke && runner.os == 'Linux'
+        run: xvfb-run -a npm run test:live
+        env:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: ngrok-for-vscode-${{ matrix.target }}
+          path: artifacts/*.vsix
+          if-no-files-found: error
