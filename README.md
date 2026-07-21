@@ -16,35 +16,29 @@
 
 - `ngrok: start`: Start an HTTP tunnel pointing to a port of your choice from the command palette
 
-  ![Open the command palette, type 'ngrok: start' and then type the port number](images/start.gif)
+  ![Open the command palette, type 'ngrok: start' and then type the port number](images/start-v2.gif)
 
   You can choose to copy the URL to the clipboard, open it in a browser or even generate a QR code so that you can easily open it on a mobile device
 
-  ![When you start a tunnel, you can choose to show a QR code which can be scanned by a mobile device](images/start-qr.gif)
-
-- `ngrok: start`: Start a named HTTP tunnel from your ngrok config
-
-  ![Open the command palette, type 'ngrok: start' and choose the tunnel from your config.](images/start-named.gif)
+  ![When you start a tunnel, you can choose to show a QR code which can be scanned by a mobile device](images/start-qr-v2.gif)
 
 - `ngrok: stop`: Stop one or all HTTP tunnels
 
-  ![Open the command palette, type 'ngrok: stop' and choose the tunnel you want to stop, or choose 'All' to stop all tunnels](images/stop.gif)
+  ![Open the command palette, type 'ngrok: stop' and choose the tunnel you want to stop, or choose 'All' to stop all tunnels](images/stop-v2.gif)
 
-- `ngrok: dashboard`: Open the ngrok dashboard
+- `ngrok: set auth token`: Set your ngrok auth token in VS Code secrets storage
 
-## Extension Settings
-
-This extension contributes the following settings:
-
-- `ngrokForVSCode.configPath`: set a custom path to your ngrok config
+- `ngrok: unset auth token`: Remove your ngrok auth token from the secrets storage
 
 ## Release Notes
 
-### [1.10.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.2...1.10.0)
+### [2.0.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.10.0...v2.0.0)
+
 #### Changed
 
-- Updated dependencies
-- Allowed for start and stop commands to receive arguments from other extension. Fixes #21
+- Started using the official ngrok package [@ngrok/ngrok](https://www.npmjs.com/package/@ngrok/ngrok)
+- Removes options to open dashboard and edit settings
+- Stops reading ngrok config file to find named tunnels
 
 See the [CHANGELOG](CHANGELOG.md) for all release notes.
 

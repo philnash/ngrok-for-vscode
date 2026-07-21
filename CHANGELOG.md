@@ -4,9 +4,15 @@ All notable changes to the "ngrok-for-vscode" extension will be documented in th
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v1.10.0...HEAD)
+## [Unreleased](https://github.com/philnash/ngrok-for-vscode/compare/v2.0.0...HEAD)
 
 ...
+
+## [2.0.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.10.0...v2.0.0)
+
+- Started using the official ngrok package [@ngrok/ngrok](https://www.npmjs.com/package/@ngrok/ngrok)
+- Removes options to open dashboard and edit settings
+- Stops reading ngrok config file to find named tunnels
 
 ## [1.10.0](https://github.com/philnash/ngrok-for-vscode/compare/v1.9.2...1.10.0)
 
