@@ -135,6 +135,26 @@ describe("NgrokExtension", () => {
     });
   });
 
+  it("reports a non-Error token retrieval failure as a Start failure", async () => {
+    const context = createContext();
+    const session = createSessionService();
+    vi.mocked(context.secrets.get).mockRejectedValueOnce(
+      "secret storage unavailable",
+    );
+
+    await expect(
+      new NgrokExtension(context, session).start(),
+    ).resolves.toBeUndefined();
+
+    expect(session.forward).not.toHaveBeenCalled();
+    expect(vscode.showErrorMessage).toHaveBeenCalledWith(
+      "Unable to start ngrok. See the ngrok output for details.",
+    );
+    expect(vscode.appendLine).toHaveBeenCalledWith(
+      'Start failed: "secret storage unavailable"',
+    );
+  });
+
   it("uses a token entered by a first-time user in the current Start", async () => {
     const context = createContext();
     const session = createSessionService();
@@ -160,6 +180,11 @@ describe("NgrokExtension", () => {
     ["65535", true],
     ["65536", false],
     ["1.5", false],
+    ["1e3", false],
+    ["0x50", false],
+    ["1.0", false],
+    ["+80", false],
+    [" 80 ", false],
     ["not-a-number", false],
   ])("accepts port %s: %s", async (addr, accepted) => {
     const session = createSessionService();
@@ -284,6 +309,31 @@ describe("NgrokExtension", () => {
     );
     expect(vscode.appendLine).toHaveBeenCalledWith(
       'Start failed: {"code":"START_FAILED","detail":"agent unavailable"}',
+    );
+  });
+
+  it("reports a Start failure even when its diagnostic value cannot be formatted", async () => {
+    const hostileValue = {
+      toJSON: () => {
+        throw new Error("cannot serialize");
+      },
+      toString: () => {
+        throw new Error("cannot stringify");
+      },
+    };
+    const session = createSessionService();
+    vi.mocked(session.forward).mockRejectedValueOnce(hostileValue);
+    vscode.showInputBox.mockResolvedValueOnce("3000");
+
+    await expect(
+      new NgrokExtension(createContext("stored-token"), session).start(),
+    ).resolves.toBeUndefined();
+
+    expect(vscode.appendLine).toHaveBeenCalledWith(
+      "Start failed: [unserializable value]",
+    );
+    expect(vscode.showErrorMessage).toHaveBeenCalledWith(
+      "Unable to start ngrok. See the ngrok output for details.",
     );
   });
 

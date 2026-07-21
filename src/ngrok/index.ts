@@ -17,7 +17,7 @@ const invalidPortMessage = "Port must be an integer from 1 through 65535.";
 
 const validatePort = (value: string) => {
   const port = Number(value);
-  return Number.isInteger(port) && port >= 1 && port <= 65535
+  return /^\d+$/.test(value) && port >= 1 && port <= 65535
     ? undefined
     : invalidPortMessage;
 };
@@ -27,9 +27,15 @@ const formatDiagnostic = (error: unknown) => {
     return error.stack ?? error.message;
   }
   try {
-    return JSON.stringify(error) ?? String(error);
-  } catch {
+    const serialized = JSON.stringify(error);
+    if (serialized !== undefined) {
+      return serialized;
+    }
+  } catch {}
+  try {
     return String(error);
+  } catch {
+    return "[unserializable value]";
   }
 };
 
@@ -51,18 +57,18 @@ export class NgrokExtension {
   }
 
   start = async () => {
-    const authToken = await this.#getAuthToken();
-    if (!authToken) {
-      return;
-    }
-    const addr = await window.showInputBox({
-      title: "Enter a port number.",
-      validateInput: validatePort,
-    });
-    if (!addr || validatePort(addr)) {
-      return;
-    }
     try {
+      const authToken = await this.#getAuthToken();
+      if (!authToken) {
+        return;
+      }
+      const addr = await window.showInputBox({
+        title: "Enter a port number.",
+        validateInput: validatePort,
+      });
+      if (!addr || validatePort(addr)) {
+        return;
+      }
       const listener = await this.session.forward({
         authToken: authToken,
         addr,
