@@ -7,7 +7,7 @@ export interface Listener {
 export interface Session {
   close(): Promise<void>;
   httpEndpoint(): {
-    listen(): Promise<Listener>;
+    listenAndForward(addr: string): Promise<Listener>;
   };
 }
 
@@ -16,26 +16,44 @@ export type SessionFactory = (authToken: string) => Promise<Session>;
 export interface SessionService {
   listeners: Listener[];
   disconnect(url: string): Promise<void>;
+  disconnectAll(): Promise<void>;
+  dispose(): Promise<void>;
   forward(options: { addr: string; authToken: string }): Promise<Listener>;
 }
 
 export class NgrokSession implements SessionService {
   session: Session | null;
   listeners: Listener[];
+  #disconnecting: Promise<void> | null;
+  #forwarding: Set<Promise<Listener>>;
+  #sessionCreation: Promise<Session> | null;
 
   constructor(private readonly createSession: SessionFactory) {
     this.session = null;
     this.listeners = [];
+    this.#disconnecting = null;
+    this.#forwarding = new Set();
+    this.#sessionCreation = null;
   }
 
-  async forward({ addr, authToken }: { addr: string; authToken: string }) {
-    if (!this.session) {
-      this.session = await this.#initiateSession(authToken);
+  forward(options: { addr: string; authToken: string }) {
+    const forwarding = this.#forward(options);
+    this.#forwarding.add(forwarding);
+    void forwarding.then(
+      () => this.#forwarding.delete(forwarding),
+      () => this.#forwarding.delete(forwarding),
+    );
+    return forwarding;
+  }
+
+  async #forward({ addr, authToken }: { addr: string; authToken: string }) {
+    const session = await this.#getSession(authToken);
+    if (this.#disconnecting || this.session !== session) {
+      throw new Error("ngrok session closed before forwarding started");
     }
-    const listener = await this.session.httpEndpoint().listen();
-    listener.forward(`localhost:${addr}`).catch((error) => {
-      console.error(error);
-    });
+    const listener = await session
+      .httpEndpoint()
+      .listenAndForward(`localhost:${addr}`);
     this.listeners.push(listener);
     return listener;
   }
@@ -44,25 +62,67 @@ export class NgrokSession implements SessionService {
     if (!this.session) {
       return;
     }
-    if (url === "All") {
-      await Promise.all(this.listeners.map((listener) => listener.close()));
-      this.listeners = [];
-    } else {
-      const listener = this.listeners.find(
-        (listener) => listener.url() === url,
-      );
-      listener?.close();
+    const listener = this.listeners.find((listener) => listener.url() === url);
+    if (!listener) {
+      return;
+    }
+    try {
+      await listener.close();
+    } finally {
       this.listeners = this.listeners.filter(
         (listener) => listener.url() !== url,
       );
-    }
-    if (this.listeners.length === 0) {
-      await this.session.close();
-      this.session = null;
+      if (this.listeners.length === 0) {
+        await this.disconnectAll();
+      }
     }
   }
 
-  async #initiateSession(authToken: string) {
-    return this.createSession(authToken);
+  async disconnectAll() {
+    if (this.#disconnecting) {
+      return this.#disconnecting;
+    }
+    const session = this.session;
+    const forwarding = [...this.#forwarding];
+    if (!session && forwarding.length === 0) {
+      this.listeners = [];
+      return;
+    }
+    const disconnecting = (async () => {
+      try {
+        await Promise.allSettled(forwarding);
+        await this.session?.close();
+      } finally {
+        this.listeners = [];
+        this.session = null;
+      }
+    })();
+    this.#disconnecting = disconnecting;
+    try {
+      await disconnecting;
+    } finally {
+      if (this.#disconnecting === disconnecting) {
+        this.#disconnecting = null;
+      }
+    }
+  }
+
+  async dispose() {
+    await this.disconnectAll();
+  }
+
+  async #getSession(authToken: string) {
+    if (this.session) {
+      return this.session;
+    }
+    if (!this.#sessionCreation) {
+      this.#sessionCreation = this.createSession(authToken);
+    }
+    try {
+      this.session = await this.#sessionCreation;
+      return this.session;
+    } finally {
+      this.#sessionCreation = null;
+    }
   }
 }

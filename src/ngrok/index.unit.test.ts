@@ -72,6 +72,12 @@ const createSessionService = (initialListeners: Listener[] = []) => {
         }
       }
     }),
+    disconnectAll: vi.fn(async () => {
+      listeners.splice(0);
+    }),
+    dispose: vi.fn(async () => {
+      listeners.splice(0);
+    }),
     forward: vi.fn(async () => {
       listeners.push(nextListener);
       return nextListener;
@@ -169,11 +175,13 @@ describe("NgrokExtension", () => {
 
     await new NgrokExtension(createContext(), session).stop();
 
+    expect(session.disconnect).toHaveBeenCalledWith("https://first.example");
+    expect(session.disconnectAll).not.toHaveBeenCalled();
     expect(session.listeners).toEqual([secondListener]);
     expect(statusBar.hide).not.toHaveBeenCalled();
   });
 
-  it("hides the status bar after Stop removes the final listener", async () => {
+  it("uses disconnectAll and hides the status bar after Stop All", async () => {
     const session = createSessionService([
       createListener("https://only.example"),
     ]);
@@ -181,6 +189,37 @@ describe("NgrokExtension", () => {
 
     await new NgrokExtension(createContext(), session).stop();
 
+    expect(session.disconnectAll).toHaveBeenCalledOnce();
+    expect(session.disconnect).not.toHaveBeenCalled();
+    expect(session.listeners).toHaveLength(0);
+    expect(statusBar.hide).toHaveBeenCalledOnce();
+  });
+
+  it("hides the status bar when Stop All clears state before failing", async () => {
+    const session = createSessionService([
+      createListener("https://only.example"),
+    ]);
+    vi.mocked(session.disconnectAll).mockImplementationOnce(async () => {
+      session.listeners.splice(0);
+      throw new Error("close failed");
+    });
+    vscode.showQuickPick.mockResolvedValueOnce({ label: "All" });
+
+    await new NgrokExtension(createContext(), session).stop();
+
+    expect(session.listeners).toHaveLength(0);
+    expect(vscode.showErrorMessage).toHaveBeenCalledWith("close failed");
+    expect(statusBar.hide).toHaveBeenCalledOnce();
+  });
+
+  it("disposes the session service and hides the status bar", async () => {
+    const session = createSessionService([
+      createListener("https://only.example"),
+    ]);
+
+    await new NgrokExtension(createContext(), session).dispose();
+
+    expect(session.dispose).toHaveBeenCalledOnce();
     expect(session.listeners).toHaveLength(0);
     expect(statusBar.hide).toHaveBeenCalledOnce();
   });

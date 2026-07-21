@@ -101,7 +101,7 @@ export class NgrokExtension {
     }
     try {
       if (url.label === "All") {
-        await this.session.disconnect("All");
+        await this.session.disconnectAll();
         window.showInformationMessage("All ngrok listeners stopped.");
       } else {
         await this.session.disconnect(url.label);
@@ -109,13 +109,22 @@ export class NgrokExtension {
           `ngrok listener at ${url.label} stopped.`,
         );
       }
-      if (this.session.listeners.length === 0) {
-        hideStatusBarItem();
-      }
     } catch (error) {
       if (isError(error)) {
         window.showErrorMessage(error.message);
       }
+    } finally {
+      if (this.session.listeners.length === 0) {
+        hideStatusBarItem();
+      }
+    }
+  };
+
+  dispose = async () => {
+    try {
+      await this.session.dispose();
+    } finally {
+      hideStatusBarItem();
     }
   };
 

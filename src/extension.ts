@@ -35,4 +35,6 @@ export function activate(
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export async function deactivate() {
+  await ngrok?.dispose();
+}

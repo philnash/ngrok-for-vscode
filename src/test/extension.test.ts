@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import * as vscode from "vscode";
-import { activate } from "../extension";
+import { activate, deactivate } from "../extension";
 import type { SessionService } from "../ngrok/ngrokSession";
 
 const commandIds = [
@@ -52,6 +52,10 @@ suite("ngrok for VS Code", () => {
         disconnectCalls.push(url);
         listeners.splice(0);
       },
+      disconnectAll: async () => {
+        listeners.splice(0);
+      },
+      dispose: async () => undefined,
       forward: async () => {
         forwardCalls += 1;
         throw new Error("Start was not expected during activation");
@@ -93,6 +97,54 @@ suite("ngrok for VS Code", () => {
       } else {
         Reflect.deleteProperty(vscode.window, "showQuickPick");
       }
+      subscriptions.forEach((subscription) => subscription.dispose());
+    }
+  });
+
+  test("deactivate awaits disposal of the injected session service", async () => {
+    let finishDisposal!: () => void;
+    const disposal = new Promise<void>((resolve) => {
+      finishDisposal = resolve;
+    });
+    let disposeCalls = 0;
+    const subscriptions: vscode.Disposable[] = [];
+    const context = {
+      secrets: {
+        delete: async () => undefined,
+        get: async () => undefined,
+        store: async () => undefined,
+      },
+      subscriptions,
+    } as unknown as vscode.ExtensionContext;
+    const session: SessionService = {
+      listeners: [],
+      disconnect: async () => undefined,
+      disconnectAll: async () => undefined,
+      dispose: async () => {
+        disposeCalls += 1;
+        await disposal;
+      },
+      forward: async () => {
+        throw new Error("Start was not expected during deactivation");
+      },
+    };
+    activate(context, session);
+    let deactivated = false;
+
+    try {
+      const deactivation = deactivate().then(() => {
+        deactivated = true;
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      assert.equal(disposeCalls, 1);
+      assert.equal(deactivated, false);
+
+      finishDisposal();
+      await deactivation;
+      assert.equal(deactivated, true);
+    } finally {
+      finishDisposal();
       subscriptions.forEach((subscription) => subscription.dispose());
     }
   });
