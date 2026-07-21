@@ -11,9 +11,31 @@ const commandIds = [
 ];
 
 suite("ngrok for VS Code", () => {
-  test("Stop command uses the injected session service", async () => {
-    let listenerReads = 0;
-    let disconnectCalls = 0;
+  let previousToken: string | undefined;
+
+  suiteSetup(() => {
+    previousToken = process.env.NGROK_AUTHTOKEN;
+    delete process.env.NGROK_AUTHTOKEN;
+  });
+
+  suiteTeardown(() => {
+    if (previousToken === undefined) {
+      delete process.env.NGROK_AUTHTOKEN;
+    } else {
+      process.env.NGROK_AUTHTOKEN = previousToken;
+    }
+  });
+
+  test("Stop command delegates the selected listener to the injected session service", async () => {
+    const listenerUrl = "https://listener.example";
+    const listeners = [
+      {
+        close: async () => undefined,
+        forward: async () => undefined,
+        url: () => listenerUrl,
+      },
+    ];
+    const disconnectCalls: string[] = [];
     let forwardCalls = 0;
     const subscriptions: vscode.Disposable[] = [];
     const context = {
@@ -25,32 +47,52 @@ suite("ngrok for VS Code", () => {
       subscriptions,
     } as unknown as vscode.ExtensionContext;
     const session: SessionService = {
-      get listeners() {
-        listenerReads += 1;
-        return [];
-      },
-      disconnect: async () => {
-        disconnectCalls += 1;
+      listeners,
+      disconnect: async (url) => {
+        disconnectCalls.push(url);
+        listeners.splice(0);
       },
       forward: async () => {
         forwardCalls += 1;
         throw new Error("Start was not expected during activation");
       },
     };
+    const showQuickPickDescriptor = Object.getOwnPropertyDescriptor(
+      vscode.window,
+      "showQuickPick",
+    );
+    Object.defineProperty(vscode.window, "showQuickPick", {
+      configurable: true,
+      value: async () => ({ label: listenerUrl }),
+    });
+    const extension = vscode.extensions.getExtension(
+      "philnash.ngrok-for-vscode",
+    );
+    assert.ok(extension);
 
     try {
+      assert.equal(process.env.NGROK_AUTHTOKEN, undefined);
+      assert.equal(extension.isActive, false);
       activate(context, session);
 
-      assert.equal(listenerReads, 0);
-      assert.equal(disconnectCalls, 0);
+      assert.deepEqual(disconnectCalls, []);
       assert.equal(forwardCalls, 0);
 
       await vscode.commands.executeCommand("ngrok-for-vscode.stop");
 
-      assert.equal(listenerReads, 1);
-      assert.equal(disconnectCalls, 0);
+      assert.deepEqual(disconnectCalls, [listenerUrl]);
       assert.equal(forwardCalls, 0);
+      assert.equal(extension.isActive, false);
     } finally {
+      if (showQuickPickDescriptor) {
+        Object.defineProperty(
+          vscode.window,
+          "showQuickPick",
+          showQuickPickDescriptor,
+        );
+      } else {
+        Reflect.deleteProperty(vscode.window, "showQuickPick");
+      }
       subscriptions.forEach((subscription) => subscription.dispose());
     }
   });
@@ -61,17 +103,8 @@ suite("ngrok for VS Code", () => {
     );
     assert.ok(extension);
 
-    const previousToken = process.env.NGROK_AUTHTOKEN;
-    delete process.env.NGROK_AUTHTOKEN;
-    try {
-      await extension.activate();
-    } finally {
-      if (previousToken === undefined) {
-        delete process.env.NGROK_AUTHTOKEN;
-      } else {
-        process.env.NGROK_AUTHTOKEN = previousToken;
-      }
-    }
+    assert.equal(process.env.NGROK_AUTHTOKEN, undefined);
+    await extension.activate();
 
     assert.equal(extension.isActive, true);
     const registeredCommands = await vscode.commands.getCommands(true);
