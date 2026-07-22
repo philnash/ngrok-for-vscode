@@ -59,4 +59,36 @@ describe("withDeadline", () => {
     });
     expect(controller.signal.aborted).toBe(true);
   });
+
+  it("includes captured diagnostics when an operation fails", async () => {
+    const result = withDeadline(
+      () => Promise.reject(new Error("session connection failed")),
+      {
+        timeoutMs: 10,
+        operationName: "Start command",
+        diagnostics: () => "output: native connection attempt failed",
+      },
+    );
+
+    await expect(result).rejects.toThrow(
+      "session connection failed\nDiagnostics:\noutput: native connection attempt failed",
+    );
+  });
+
+  it("sanitizes a failed operation before attaching diagnostics", async () => {
+    const result = withDeadline(
+      () => Promise.reject(new Error("session rejected test-auth-token")),
+      {
+        timeoutMs: 10,
+        operationName: "Start command",
+        diagnostics: () => "output: [REDACTED]",
+        sanitizeDiagnostic: (message) =>
+          message.split("test-auth-token").join("[REDACTED]"),
+      },
+    );
+
+    await expect(result).rejects.toThrow(
+      "session rejected [REDACTED]\nDiagnostics:\noutput: [REDACTED]",
+    );
+  });
 });

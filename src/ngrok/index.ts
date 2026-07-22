@@ -8,6 +8,7 @@ import {
   window,
 } from "vscode";
 import { isError } from "./error";
+import { sanitizeDiagnostic } from "./diagnostics";
 import { showQR } from "./qr";
 import { hideStatusBarItem, showStatusBarItem } from "./statusBarItem";
 import type { SessionService } from "./ngrokSession";
@@ -225,12 +226,12 @@ export class NgrokExtension {
 
   #reportError(operation: string, error: unknown, userMessage?: string) {
     this.outputChannel.appendLine(
-      `${operation} failed: ${formatDiagnostic(error)}`,
+      `${operation} failed: ${sanitizeDiagnostic(formatDiagnostic(error))}`,
     );
     window.showErrorMessage(
       userMessage ??
         (isError(error)
-          ? error.message
+          ? sanitizeDiagnostic(error.message)
           : `Unable to ${operation.toLowerCase()} ngrok. See the ngrok output for details.`),
     );
   }

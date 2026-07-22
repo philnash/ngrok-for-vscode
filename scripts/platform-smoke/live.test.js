@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { createServer } = require("node:http");
 const { join } = require("node:path");
 const vscode = require("vscode");
+const { createDiagnosticRecorder } = require("./live-diagnostics");
 const { withDeadline } = require("./live-operations");
 
 const responseBody = "ngrok-for-vscode packaged live smoke";
@@ -110,6 +111,7 @@ suite("packaged platform extension live smoke", () => {
       let commands;
       const subscriptions = [];
       const restore = [];
+      const diagnostics = createDiagnosticRecorder();
 
       try {
         const localServer = await listen();
@@ -125,7 +127,7 @@ suite("packaged platform extension live smoke", () => {
           subscriptions,
         };
         const outputChannel = {
-          appendLine: () => undefined,
+          appendLine: (line) => diagnostics.record(`output: ${line}`),
           dispose: () => undefined,
         };
         commands = createCommandRegistry();
@@ -145,6 +147,16 @@ suite("packaged platform extension live smoke", () => {
           ),
         );
         restore.push(
+          replaceProperty(
+            vscode.window,
+            "showErrorMessage",
+            async (message) => {
+              diagnostics.record(`error: ${message}`);
+              return undefined;
+            },
+          ),
+        );
+        restore.push(
           replaceProperty(vscode.window, "showQuickPick", async (items) => {
             assert.ok(
               items.some((item) => item.label === listenerUrl),
@@ -159,58 +171,87 @@ suite("packaged platform extension live smoke", () => {
           outputChannel,
           commands.commandRegistry,
         );
-        await withDeadline(() => commands.execute("ngrok-for-vscode.start"), {
-          timeoutMs: startTimeoutMs,
-          operationName: "Start command",
-          onTimeout: deactivate,
-          onLateResult: deactivate,
-        });
-
-        const startMessage = messages.find((message) =>
-          message.startsWith("ngrok is forwarding "),
+        listenerUrl = await withDeadline(
+          async () => {
+            await commands.execute("ngrok-for-vscode.start");
+            const startMessage = messages.find((message) =>
+              message.startsWith("ngrok is forwarding "),
+            );
+            assert.ok(
+              startMessage,
+              "Start should report the public listener URL",
+            );
+            const match = /^ngrok is forwarding (.+)\.$/.exec(startMessage);
+            assert.ok(match, "Start should report a public listener URL");
+            return match[1];
+          },
+          {
+            timeoutMs: startTimeoutMs,
+            operationName: "Start command",
+            onTimeout: deactivate,
+            onLateResult: deactivate,
+            diagnostics: diagnostics.format,
+            sanitizeDiagnostic: diagnostics.sanitize,
+          },
         );
-        assert.ok(startMessage, "Start should report the public listener URL");
-        const match = /^ngrok is forwarding (.+)\.$/.exec(startMessage);
-        assert.ok(match, "Start should report a public listener URL");
-        listenerUrl = match[1];
 
         const fetchController = new AbortController();
         const response = await withDeadline(
-          () =>
-            fetch(listenerUrl, {
+          async () => {
+            const response = await fetch(listenerUrl, {
               headers: { "ngrok-skip-browser-warning": "true" },
               signal: fetchController.signal,
-            }),
+            });
+            assert.equal(response.status, 200);
+            return response;
+          },
           {
             timeoutMs: fetchTimeoutMs,
             operationName: "Public listener fetch",
             onTimeout: () => fetchController.abort(),
             onLateResult: (lateResponse) => lateResponse.body?.cancel(),
+            diagnostics: diagnostics.format,
+            sanitizeDiagnostic: diagnostics.sanitize,
           },
         );
-        assert.equal(response.status, 200);
-        const responseText = await withDeadline(() => response.text(), {
-          timeoutMs: fetchTimeoutMs,
-          operationName: "Public listener response body",
-          onTimeout: () => fetchController.abort(),
-        });
-        assert.equal(responseText, responseBody);
+        await withDeadline(
+          async () => {
+            const responseText = await response.text();
+            assert.equal(responseText, responseBody);
+          },
+          {
+            timeoutMs: fetchTimeoutMs,
+            operationName: "Public listener response body",
+            onTimeout: () => fetchController.abort(),
+            diagnostics: diagnostics.format,
+            sanitizeDiagnostic: diagnostics.sanitize,
+          },
+        );
 
-        await withDeadline(() => commands.execute("ngrok-for-vscode.stop"), {
-          timeoutMs: stopTimeoutMs,
-          operationName: "Stop command",
-          onTimeout: deactivate,
-          onLateResult: deactivate,
-        });
-        assert.ok(
-          messages.includes(`ngrok listener at ${listenerUrl} stopped.`),
-          "Stop should report the stopped listener URL",
+        await withDeadline(
+          async () => {
+            await commands.execute("ngrok-for-vscode.stop");
+            assert.ok(
+              messages.includes(`ngrok listener at ${listenerUrl} stopped.`),
+              "Stop should report the stopped listener URL",
+            );
+          },
+          {
+            timeoutMs: stopTimeoutMs,
+            operationName: "Stop command",
+            onTimeout: deactivate,
+            onLateResult: deactivate,
+            diagnostics: diagnostics.format,
+            sanitizeDiagnostic: diagnostics.sanitize,
+          },
         );
       } finally {
         try {
           await withDeadline(() => deactivate?.(), {
             timeoutMs: cleanupTimeoutMs,
             operationName: "Packaged extension deactivation",
+            diagnostics: diagnostics.format,
+            sanitizeDiagnostic: diagnostics.sanitize,
           });
         } finally {
           try {
@@ -228,6 +269,8 @@ suite("packaged platform extension live smoke", () => {
                 await withDeadline(() => closeServer(server), {
                   timeoutMs: cleanupTimeoutMs,
                   operationName: "Local HTTP server shutdown",
+                  diagnostics: diagnostics.format,
+                  sanitizeDiagnostic: diagnostics.sanitize,
                 });
               }
             }

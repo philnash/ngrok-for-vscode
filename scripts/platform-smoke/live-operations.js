@@ -7,9 +7,35 @@ const runCleanup = (cleanup, value) => {
   } catch {}
 };
 
+const withDiagnostics = (error, diagnostics, sanitizeDiagnostic) => {
+  if (!diagnostics) {
+    return error;
+  }
+  let captured;
+  try {
+    captured = diagnostics();
+  } catch {
+    return error;
+  }
+  if (!captured) {
+    return error;
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  return new Error(
+    `${sanitizeDiagnostic ? sanitizeDiagnostic(message) : message}\nDiagnostics:\n${captured}`,
+  );
+};
+
 const withDeadline = (
   operation,
-  { timeoutMs, operationName, onTimeout, onLateResult },
+  {
+    timeoutMs,
+    operationName,
+    onTimeout,
+    onLateResult,
+    diagnostics,
+    sanitizeDiagnostic,
+  },
 ) => {
   let timedOut = false;
   let timer;
@@ -27,11 +53,22 @@ const withDeadline = (
     timer = setTimeout(() => {
       timedOut = true;
       runCleanup(onTimeout);
-      reject(new Error(`${operationName} timed out after ${timeoutMs}ms`));
+      reject(
+        withDiagnostics(
+          new Error(`${operationName} timed out after ${timeoutMs}ms`),
+          diagnostics,
+          sanitizeDiagnostic,
+        ),
+      );
     }, timeoutMs);
   });
 
-  return Promise.race([inFlight, deadline]).finally(() => clearTimeout(timer));
+  return Promise.race([
+    inFlight.catch((error) => {
+      throw withDiagnostics(error, diagnostics, sanitizeDiagnostic);
+    }),
+    deadline,
+  ]).finally(() => clearTimeout(timer));
 };
 
 module.exports = { withDeadline };

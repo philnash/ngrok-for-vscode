@@ -10,11 +10,16 @@ let ngrok: NgrokExtension;
 
 export function activate(
   context: ExtensionContext,
-  session: SessionService = new NgrokSession(createSession),
+  session: SessionService | undefined = undefined,
   outputChannel: OutputChannel = window.createOutputChannel("ngrok"),
   commandRegistry: Pick<typeof commands, "registerCommand"> = commands,
 ) {
-  ngrok = new NgrokExtension(context, session, outputChannel);
+  const extensionSession =
+    session ??
+    new NgrokSession((authToken) =>
+      createSession(authToken, outputChannel.appendLine.bind(outputChannel)),
+    );
+  ngrok = new NgrokExtension(context, extensionSession, outputChannel);
   context.subscriptions.push(
     commandRegistry.registerCommand(`${extensionName}.start`, ngrok.start),
   );

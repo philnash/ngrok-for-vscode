@@ -312,6 +312,27 @@ describe("NgrokExtension", () => {
     );
   });
 
+  it("redacts the environment auth token from Start diagnostics", async () => {
+    const token = "environment-test-token";
+    const session = createSessionService();
+    vi.stubEnv("NGROK_AUTHTOKEN", token);
+    vi.mocked(session.forward).mockRejectedValueOnce(
+      new Error(`session rejected ${token} twice: ${token}`),
+    );
+    vscode.showInputBox.mockResolvedValueOnce("3000");
+
+    await new NgrokExtension(createContext(), session).start();
+
+    const output = vi.mocked(vscode.appendLine).mock.calls[0]?.[0];
+    expect(output).toContain(
+      "Start failed: Error: session rejected [REDACTED] twice: [REDACTED]",
+    );
+    expect(output).not.toContain(token);
+    expect(vscode.showErrorMessage).toHaveBeenCalledWith(
+      "session rejected [REDACTED] twice: [REDACTED]",
+    );
+  });
+
   it("reports a Start failure even when its diagnostic value cannot be formatted", async () => {
     const hostileValue = {
       toJSON: () => {
