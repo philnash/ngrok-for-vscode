@@ -42,6 +42,7 @@ describe("platform package workflow", () => {
       expect(probe).toContain(
         "run: node scripts/platform-smoke/connectivity-probe.mjs",
       );
+      expect(probe).toContain("continue-on-error: true");
       expect(probe).not.toContain("NGROK_AUTHTOKEN");
       expect(probe).not.toContain("NGROK_DEBUG_LOGGING");
       expect(workflow).toMatch(

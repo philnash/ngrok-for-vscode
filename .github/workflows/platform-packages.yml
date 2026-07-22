@@ -99,6 +99,7 @@ jobs:
       - name: Probe ngrok agent connectivity on Windows
         if: github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke && runner.os == 'Windows'
         run: node scripts/platform-smoke/connectivity-probe.mjs
+        continue-on-error: true
 
       - name: Run live listener smoke on Windows
         if: github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke && runner.os == 'Windows'
@@ -112,6 +113,7 @@ jobs:
       - name: Probe ngrok agent connectivity on Linux
         if: github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke && runner.os == 'Linux'
         run: node scripts/platform-smoke/connectivity-probe.mjs
+        continue-on-error: true
 
       - name: Run live listener smoke on Linux
         if: github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke && runner.os == 'Linux'
