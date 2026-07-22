@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { activate, deactivate } from "../extension";
 import { NgrokSession, type Listener } from "../ngrok/ngrokSession";
 import { createSession } from "../ngrok/sessionFactory";
+import { retryForReachability } from "./retryForReachability";
 import { retryForSession } from "./retryForSession";
 
 const responseBody = "ngrok-for-vscode live test";
@@ -33,11 +34,13 @@ const closeServer = (server: Server) =>
 const assertReachable = async (listener: Listener) => {
   const url = listener.url();
   assert.ok(url, "ngrok listener did not return a public URL");
-  const response = await fetch(url, {
-    headers: { "ngrok-skip-browser-warning": "true" },
+  await retryForReachability(async () => {
+    const response = await fetch(url, {
+      headers: { "ngrok-skip-browser-warning": "true" },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), responseBody);
   });
-  assert.equal(response.status, 200);
-  assert.equal(await response.text(), responseBody);
 };
 
 const createContext = () => {
