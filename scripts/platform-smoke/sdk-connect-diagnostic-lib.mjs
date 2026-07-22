@@ -1,5 +1,6 @@
 const defaultMaxLines = 20;
 const defaultMaxLineLength = 500;
+const defaultDrainTimeoutMs = 1_000;
 const defaultTimeoutMs = 20_000;
 
 const formatError = (error) => {
@@ -51,6 +52,20 @@ const withDeadline = (operation, { timeoutMs }) => {
   });
 
   return Promise.race([inFlight, deadline]).finally(() => clearTimeout(timer));
+};
+
+const withDrainDeadline = (flush, timeoutMs) => {
+  let timer;
+  const draining = Promise.resolve().then(flush);
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(
+        new Error(`diagnostic output drain timed out after ${timeoutMs}ms`),
+      );
+    }, timeoutMs);
+  });
+
+  return Promise.race([draining, deadline]).finally(() => clearTimeout(timer));
 };
 
 export const createSdkConnectDiagnostic = ({
@@ -119,6 +134,7 @@ export const createSdkConnectDiagnostic = ({
 };
 
 export const runSdkConnectDiagnosticWrapper = async ({
+  drainTimeoutMs = defaultDrainTimeoutMs,
   exit,
   flush = async () => undefined,
   run,
@@ -128,7 +144,7 @@ export const runSdkConnectDiagnosticWrapper = async ({
     status = await run();
   } finally {
     try {
-      await flush();
+      await withDrainDeadline(flush, drainTimeoutMs);
     } catch {
       status = 1;
     }

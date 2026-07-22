@@ -166,4 +166,23 @@ describe("direct SDK connect diagnostic", () => {
 
     expect(exit).toHaveBeenCalledWith(1);
   });
+
+  it("forces a non-zero exit when output flush exceeds its drain deadline", async () => {
+    vi.useFakeTimers();
+    const exit = vi.fn();
+    const flush = vi.fn(() => new Promise(() => undefined));
+    const run = vi.fn().mockResolvedValue(0);
+    const wrapper = runSdkConnectDiagnosticWrapper({
+      drainTimeoutMs: 10,
+      exit,
+      flush,
+      run,
+    });
+
+    await vi.advanceTimersByTimeAsync(10);
+
+    expect(flush).toHaveBeenCalledOnce();
+    expect(exit).toHaveBeenCalledWith(1);
+    await wrapper;
+  });
 });
