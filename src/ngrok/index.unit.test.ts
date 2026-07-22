@@ -333,6 +333,24 @@ describe("NgrokExtension", () => {
     );
   });
 
+  it("redacts a stored auth token from Start diagnostics", async () => {
+    const token = "stored-test-token";
+    const session = createSessionService();
+    vi.mocked(session.forward).mockRejectedValueOnce(
+      new Error(`session rejected ${token}`),
+    );
+    vscode.showInputBox.mockResolvedValueOnce("3000");
+
+    await new NgrokExtension(createContext(token), session).start();
+
+    const output = vi.mocked(vscode.appendLine).mock.calls[0]?.[0];
+    expect(output).toContain("session rejected [REDACTED]");
+    expect(output).not.toContain(token);
+    expect(vscode.showErrorMessage).toHaveBeenCalledWith(
+      "session rejected [REDACTED]",
+    );
+  });
+
   it("reports a Start failure even when its diagnostic value cannot be formatted", async () => {
     const hostileValue = {
       toJSON: () => {
@@ -374,6 +392,28 @@ describe("NgrokExtension", () => {
     );
     expect(vscode.appendLine).toHaveBeenCalledWith(
       'Stop failed: "agent unavailable"',
+    );
+  });
+
+  it("redacts a stored auth token from Stop diagnostics", async () => {
+    const token = "stored-test-token";
+    const session = createSessionService([
+      createListener("https://listener.example"),
+    ]);
+    vi.mocked(session.disconnect).mockRejectedValueOnce(
+      new Error(`listener close rejected ${token}`),
+    );
+    vscode.showQuickPick.mockResolvedValueOnce({
+      label: "https://listener.example",
+    });
+
+    await new NgrokExtension(createContext(token), session).stop();
+
+    const output = vi.mocked(vscode.appendLine).mock.calls[0]?.[0];
+    expect(output).toContain("listener close rejected [REDACTED]");
+    expect(output).not.toContain(token);
+    expect(vscode.showErrorMessage).toHaveBeenCalledWith(
+      "listener close rejected [REDACTED]",
     );
   });
 

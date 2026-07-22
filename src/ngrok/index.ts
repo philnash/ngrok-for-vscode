@@ -58,8 +58,9 @@ export class NgrokExtension {
   }
 
   start = async () => {
+    let authToken: string | undefined;
     try {
-      const authToken = await this.#getAuthToken();
+      authToken = await this.#getAuthToken();
       if (!authToken) {
         return;
       }
@@ -109,7 +110,9 @@ export class NgrokExtension {
         }
       }
     } catch (error) {
-      this.#reportError("Start", error);
+      this.#reportError("Start", error, undefined, authToken);
+    } finally {
+      authToken = undefined;
     }
   };
 
@@ -140,7 +143,8 @@ export class NgrokExtension {
         );
       }
     } catch (error) {
-      this.#reportError("Stop", error);
+      const authToken = await this.#getStoredAuthTokenForDiagnostics();
+      this.#reportError("Stop", error, undefined, authToken);
     } finally {
       if (this.session.listeners.length === 0) {
         hideStatusBarItem();
@@ -224,14 +228,29 @@ export class NgrokExtension {
     return authToken;
   }
 
-  #reportError(operation: string, error: unknown, userMessage?: string) {
+  async #getStoredAuthTokenForDiagnostics() {
+    try {
+      return await this.context.secrets.get(authTokenKey);
+    } catch {
+      return undefined;
+    }
+  }
+
+  #reportError(
+    operation: string,
+    error: unknown,
+    userMessage?: string,
+    authToken?: string,
+  ) {
+    const sanitize = (message: string) =>
+      sanitizeDiagnostic(message, [process.env.NGROK_AUTHTOKEN, authToken]);
     this.outputChannel.appendLine(
-      `${operation} failed: ${sanitizeDiagnostic(formatDiagnostic(error))}`,
+      `${operation} failed: ${sanitize(formatDiagnostic(error))}`,
     );
     window.showErrorMessage(
       userMessage ??
         (isError(error)
-          ? sanitizeDiagnostic(error.message)
+          ? sanitize(error.message)
           : `Unable to ${operation.toLowerCase()} ngrok. See the ngrok output for details.`),
     );
   }
