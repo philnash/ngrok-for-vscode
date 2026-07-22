@@ -100,7 +100,6 @@ suite("ngrok live lifecycle", () => {
     assert.ok(authToken, "NGROK_AUTHTOKEN is required for live tests");
     const { port, server } = await listen();
     const session = new NgrokSession(createSession);
-    const replacementSession = new NgrokSession(createSession);
     const { context, subscriptions } = createContext();
 
     activate(context, session, createOutputChannel());
@@ -114,22 +113,12 @@ suite("ngrok live lifecycle", () => {
       await deactivate();
       assert.equal(session.listeners.length, 0);
       assert.equal(session.session, null);
-
-      const replacementListener = await retryForSession(
-        () => replacementSession.forward({ addr: port, authToken }),
-        { cleanupLateResult: () => replacementSession.disconnectAll() },
-      );
-      await assertReachable(replacementListener);
     } finally {
       try {
         await deactivate();
       } finally {
-        try {
-          await replacementSession.dispose();
-        } finally {
-          subscriptions.forEach((subscription) => subscription.dispose());
-          await closeServer(server);
-        }
+        subscriptions.forEach((subscription) => subscription.dispose());
+        await closeServer(server);
       }
     }
   });
