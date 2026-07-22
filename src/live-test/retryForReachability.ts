@@ -8,14 +8,34 @@ export const retryForReachability = async (
   { timeoutMs = 5_000, intervalMs = 250 }: RetryForReachabilityOptions = {},
 ) => {
   const deadline = Date.now() + timeoutMs;
-  let lastError: unknown;
+  let lastError: unknown = new Error(
+    "public listener did not respond before the deadline",
+  );
   do {
-    try {
-      await operation();
+    const attempt = Promise.resolve().then(operation);
+    let timeout: ReturnType<typeof setTimeout>;
+    const outcome = await Promise.race([
+      attempt.then(
+        () => ({ status: "success" }) as const,
+        (error: unknown) => ({ status: "failure", error }) as const,
+      ),
+      new Promise<{ status: "timeout" }>((resolve) => {
+        timeout = setTimeout(
+          () => resolve({ status: "timeout" }),
+          Math.max(0, deadline - Date.now()),
+        );
+      }),
+    ]);
+    clearTimeout(timeout!);
+
+    if (outcome.status === "success") {
       return;
-    } catch (error) {
-      lastError = error;
     }
+    if (outcome.status === "timeout") {
+      break;
+    }
+
+    lastError = outcome.error;
     const remaining = deadline - Date.now();
     if (remaining <= 0) {
       break;
