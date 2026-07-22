@@ -65,7 +65,7 @@ export class NgrokSession implements SessionService {
     }
     const listener = await session
       .httpEndpoint()
-      .listenAndForward(`localhost:${addr}`);
+      .listenAndForward(`http://localhost:${addr}`);
     if (this.#disconnecting || this.session !== session) {
       await listener.close();
       throw new Error("ngrok session closed before forwarding started");

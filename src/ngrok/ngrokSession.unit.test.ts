@@ -48,8 +48,14 @@ describe("NgrokSession", () => {
     expect(factory).toHaveBeenCalledOnce();
     expect(factory).toHaveBeenCalledWith("test-token");
     expect(listen).not.toHaveBeenCalled();
-    expect(listenAndForward).toHaveBeenNthCalledWith(1, "localhost:3000");
-    expect(listenAndForward).toHaveBeenNthCalledWith(2, "localhost:4000");
+    expect(listenAndForward).toHaveBeenNthCalledWith(
+      1,
+      "http://localhost:3000",
+    );
+    expect(listenAndForward).toHaveBeenNthCalledWith(
+      2,
+      "http://localhost:4000",
+    );
     expect(firstListener.forward).not.toHaveBeenCalled();
     expect(secondListener.forward).not.toHaveBeenCalled();
   });
@@ -231,7 +237,7 @@ describe("NgrokSession", () => {
       ngrok.forward({ addr: "3000", authToken: "test-token" }),
     ).rejects.toThrow("forward failed");
 
-    expect(listenAndForward).toHaveBeenCalledWith("localhost:3000");
+    expect(listenAndForward).toHaveBeenCalledWith("http://localhost:3000");
     expect(ngrok.listeners).toEqual([]);
   });
 
