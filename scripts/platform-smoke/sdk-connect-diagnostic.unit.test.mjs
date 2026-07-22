@@ -185,4 +185,38 @@ describe("direct SDK connect diagnostic", () => {
     expect(exit).toHaveBeenCalledWith(1);
     await wrapper;
   });
+
+  it("unregisters logging and forces exit when an individual error write never resolves", async () => {
+    vi.useFakeTimers();
+    const pendingWrites = [];
+    const error = vi.fn(() => {
+      const pending = new Promise(() => undefined);
+      pendingWrites.push(pending);
+      return pending;
+    });
+    const sdk = createSdk({
+      connect: vi.fn().mockRejectedValue(new Error("connection rejected")),
+    });
+    const diagnostic = createSdkConnectDiagnostic({
+      authToken: "test-auth-token",
+      error,
+      log: vi.fn(),
+      sdk,
+    });
+    const exit = vi.fn();
+    const wrapper = runSdkConnectDiagnosticWrapper({
+      drainTimeoutMs: 10,
+      exit,
+      flush: () => Promise.all(pendingWrites),
+      run: diagnostic.run,
+    });
+
+    await vi.advanceTimersByTimeAsync(10);
+
+    expect(error).toHaveBeenCalled();
+    expect(sdk.loggingCallback).toHaveBeenLastCalledWith();
+    expect(sdk.getLoggingCallback()).toBeUndefined();
+    expect(exit).toHaveBeenCalledWith(1);
+    await wrapper;
+  });
 });

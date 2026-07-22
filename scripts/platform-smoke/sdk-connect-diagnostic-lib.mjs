@@ -82,15 +82,15 @@ export const createSdkConnectDiagnostic = ({
     maxLines,
     maxLineLength,
   });
-  const reportFailure = async (cause) => {
-    await error(
+  const reportFailure = (cause) => {
+    void error(
       diagnostics.formatLine(
         `ngrok direct SDK diagnostic failed: ${formatError(cause)}`,
       ),
     );
-    await error(diagnostics.formatLine("ngrok direct SDK diagnostics:"));
+    void error(diagnostics.formatLine("ngrok direct SDK diagnostics:"));
     for (const line of diagnostics.format()) {
-      await error(line);
+      void error(line);
     }
   };
 
@@ -115,14 +115,14 @@ export const createSdkConnectDiagnostic = ({
           },
           { timeoutMs },
         );
-        await log(
+        void log(
           diagnostics.formatLine(
             "ngrok direct SDK diagnostic connected and closed a session",
           ),
         );
         return 0;
       } catch (cause) {
-        await reportFailure(cause);
+        reportFailure(cause);
         return 1;
       } finally {
         if (loggingCallbackRegistered) {
