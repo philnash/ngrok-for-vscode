@@ -52,4 +52,36 @@ describe("platform package workflow", () => {
       );
     }
   });
+
+  it("runs the direct SDK diagnostic after each live smoke even when it fails", () => {
+    const platforms = ["Windows", "Linux"];
+
+    for (const platform of platforms) {
+      const smokeName = `Run live listener smoke on ${platform}`;
+      const diagnosticName = `Diagnose direct SDK connect on ${platform}`;
+      const diagnostic = workflow.match(
+        new RegExp(
+          `- name: ${diagnosticName}\\n[\\s\\S]*?(?=\\n      - name:|$)`,
+        ),
+      )?.[0];
+      expect(diagnostic, `${diagnosticName} should exist`).toBeDefined();
+      expect(diagnostic).toContain(
+        "if: always() && github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke",
+      );
+      expect(diagnostic).toContain(`runner.os == '${platform}'`);
+      expect(diagnostic).toContain(
+        "run: node scripts/platform-smoke/sdk-connect-diagnostic.mjs",
+      );
+      expect(diagnostic).toContain("continue-on-error: true");
+      expect(diagnostic).toContain('NGROK_DEBUG_LOGGING: "true"');
+      expect(diagnostic).toContain(
+        "NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}",
+      );
+      expect(workflow).toMatch(
+        new RegExp(
+          `- name: ${smokeName}[\\s\\S]*?\\n\\n      - name: ${diagnosticName}`,
+        ),
+      );
+    }
+  });
 });

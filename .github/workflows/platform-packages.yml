@@ -110,6 +110,14 @@ jobs:
           NGROK_DEBUG_LOGGING: "true"
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
 
+      - name: Diagnose direct SDK connect on Windows
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke && runner.os == 'Windows'
+        run: node scripts/platform-smoke/sdk-connect-diagnostic.mjs
+        continue-on-error: true
+        env:
+          NGROK_DEBUG_LOGGING: "true"
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+
       - name: Probe ngrok agent connectivity on Linux
         if: github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke && runner.os == 'Linux'
         run: node scripts/platform-smoke/connectivity-probe.mjs
@@ -121,6 +129,14 @@ jobs:
         env:
           VSCODE_PLATFORM_TARGET: ${{ matrix.target }}
           NGROK_PLATFORM_LIVE_SMOKE: "true"
+          NGROK_DEBUG_LOGGING: "true"
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+
+      - name: Diagnose direct SDK connect on Linux
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.run_live && matrix.live_smoke && runner.os == 'Linux'
+        run: node scripts/platform-smoke/sdk-connect-diagnostic.mjs
+        continue-on-error: true
+        env:
           NGROK_DEBUG_LOGGING: "true"
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
 
