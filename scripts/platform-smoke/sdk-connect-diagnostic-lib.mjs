@@ -67,20 +67,21 @@ export const createSdkConnectDiagnostic = ({
     maxLines,
     maxLineLength,
   });
-  const reportFailure = (cause) => {
-    error(
+  const reportFailure = async (cause) => {
+    await error(
       diagnostics.formatLine(
         `ngrok direct SDK diagnostic failed: ${formatError(cause)}`,
       ),
     );
-    error(diagnostics.formatLine("ngrok direct SDK diagnostics:"));
+    await error(diagnostics.formatLine("ngrok direct SDK diagnostics:"));
     for (const line of diagnostics.format()) {
-      error(line);
+      await error(line);
     }
   };
 
   return {
     run: async () => {
+      let loggingCallbackRegistered = false;
       try {
         if (!authToken) {
           throw new Error("NGROK_AUTHTOKEN is required");
@@ -88,6 +89,7 @@ export const createSdkConnectDiagnostic = ({
         sdk.loggingCallback((level, target, message) => {
           diagnostics.record(`ngrok SDK ${level} ${target} - ${message}`);
         }, "DEBUG");
+        loggingCallbackRegistered = true;
         await withDeadline(
           async () => {
             const connected = await new sdk.SessionBuilder()
@@ -98,25 +100,38 @@ export const createSdkConnectDiagnostic = ({
           },
           { timeoutMs },
         );
-        log(
+        await log(
           diagnostics.formatLine(
             "ngrok direct SDK diagnostic connected and closed a session",
           ),
         );
         return 0;
       } catch (cause) {
-        reportFailure(cause);
+        await reportFailure(cause);
         return 1;
+      } finally {
+        if (loggingCallbackRegistered) {
+          sdk.loggingCallback();
+        }
       }
     },
   };
 };
 
-export const runSdkConnectDiagnosticWrapper = async ({ exit, run }) => {
+export const runSdkConnectDiagnosticWrapper = async ({
+  exit,
+  flush = async () => undefined,
+  run,
+}) => {
   let status = 1;
   try {
     status = await run();
   } finally {
+    try {
+      await flush();
+    } catch {
+      status = 1;
+    }
     exit(status);
   }
 };
